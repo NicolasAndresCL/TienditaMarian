@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2YKB5QZ8QN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-2YKB5QZ8QN');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portafolio de {{ nombre_tienda }}</title>
+    {% load static %}
+    <link rel="icon" href="{% static 'productos/img/img1.jpeg' %}" type="image/png" sizes="16x16">
+    <link rel="stylesheet" href="{% static 'productos/css/style.css' %}?v={% now "U" %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-contenido">
+            <img src="{% static 'productos/img/img1.jpeg' %}" alt="Tu Foto" class="foto-perfil">
+            <div class="texto-encabezado">
+                <h1>¡Bienvenido a la Tiendita de Marian</h1>
+                <p>{{ descripcion_corta }}</p>
+            </div>
+        </div>
+        <nav class="navbar-principal">
+            <ul class="nav-links">
+                <li><a href="#sobre-mi">Sobre mí</a></li>
+                <li><a href="#products">Productos</a></li>
+                <li><a href="#habilidades">Habilidades</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+                <li><a href="{% url 'admin:index' %}" target="_blank">Admin</a></li>
+                <li><a href="/api/schema/swagger-ui/" target="_blank">Swagger UI</a></li>
+                <li><a href="/api/schema/redoc/" target="_blank">Redoc</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="sobre-mi">
+            <h2>Sobre Tiendita de Marian</h2>
+            <p>Esta es una tiendita con los mejores peluches y jueguetes americanos.</p>
+            <p>Todo a un precio muy economico.</p>
+            <div class="botones-sociales">
+                <a href="https://www.instagram.com/tienditademarian/" target="_blank" class="boton-social instagram">
+                    <img src="{% static 'productos/img/Instagram.png' %}" alt="Instagram Logo">
+                    Instagram
+                </a>
+                <a href="https://web.facebook.com/search/top?q=tienditademarian" target="_blank" class="boton-social facebook">
+                    <img src="{% static 'productos/img/Facebook.png' %}" alt="Facebook Logo">
+                    Facebook
+                </a>
+                <a href="https://www.tiktok.com/@tienditademarian2018" target="_blank" class="boton-social tiktok">
+                    <img src="{% static 'productos/img/TikTok.png' %}" alt="Tiktok Logo">
+                    TikTok
+                </a>
+                <a href="{% static 'portfolio_app/docs/NicolasCano_BackendDeveloper_CV.pdf' %}" target="_blank" class="buttonDownload cv">
+                    Descargar CV
+                </a>
+            </div>
+
+        </section>
+        <section id="proyectos">
+            <h2>Mis Productos Destacados</h2>
+            <div class="proyectos-grid">
+                {% for producto in productos %}
+                    <a href="{{ project.github_link }}" target="_blank" class="proyecto-card-link">
+                        <div class="proyecto-card">
+                            <h3>{{ producto.nombre }}</h3>
+                            <p>{{ producto.descripcion|truncatechars:150 }}</p>
+                            <p>Precio: {{ producto.precio }}</p>
+                            {% if producto.image %}
+                                <img src="{{ producto.image.url }}" alt="{{ producto.nombre }}" class="project-image">
+                            {% endif %}
+                            {% if producto.stock %}
+                                <a href="{{ producto.stock }}" target="_blank">Ver Proyecto</a>
+                            {% endif %}
+                        </div>
+                    </a>
+                {% empty %}
+                    <p>¡Pronto añadiré más productos!</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="mis-habilidades" id="habilidades">
+            <h2>Mis Ofertas</h2>
+            <div class="habilidades-container">
+                {% for skill in skills %}
+                    <div class="habilidad-item">
+                        {{ skill.name }} (Nivel: {{ skill.level }})
+                    </div>
+                {% empty %}
+                    <p>¡Pronto añadiré mis habilidades!</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="contacto">
+            <div class="contact-form-nude">
+                <span class="heading">Contactame</span>
+                <form method="POST">
+                    {% csrf_token %}
+                    <p>Si tienes alguna pregunta o quieres colaborar, ¡no dudes en escribirme!</p>
+                    <label for="name">Nombre:</label>
+                    <input type="text" id="name" name="name" required="">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required="">
+                    <label for="message">Mensaje:</label>
+                    <textarea id="message" name="message" required=""></textarea>
+                    <button type="submit" class="boton-formulario">
+                        <svg class="icono-formulario" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0
+                                00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Enviar mensaje
+                    </button>
+
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; {% now "Y" %} {{ nombre_portfolio }}. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html>

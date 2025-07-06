@@ -1,0 +1,580 @@
+body {
+    font-family: 'Montserrat', sans-serif; /* Fuente principal para el cuerpo */
+    margin: 0;
+    padding: 0;
+    background-color: #F8F0FF; /* Lila Pastel Muy Claro (LavenderBlush) */
+    color: #6A5ACD; /* Azul Pizarra Medio (SlateBlue) para un contraste suave */
+    line-height: 1.6;
+}
+
+.texto-header {
+    text-align: center;
+}
+
+.header-contenido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px; /* Separación uniforme entre imagen y texto */
+    padding: 20px;
+}
+
+header {
+    background-color: #E6E6FA; /* Lavanda (Lavender) */
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    padding: 1em 0;
+    text-align: center;
+    position: relative;
+}
+
+header h1 {
+    font-family: 'Playfair Display', serif; /* Fuente llamativa para h1 */
+    font-style: italic; /* Título en cursiva */
+    margin-bottom: 0.5em;
+    color: #6A5ACD; /* Azul Pizarra Medio */
+}
+
+nav a {
+    font-family: 'Montserrat', sans-serif; /* Consistencia con el cuerpo */
+    color: #9370DB; /* Morado Medio (MediumPurple) */
+    margin: 0 15px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #BA55D3; /* Orquídea Media (MediumOrchid) */
+}
+
+main {
+    padding: 20px;
+    max-width: 900px;
+    margin: 20px auto;
+    background-color: #FFF0F5; /* Lila Rosado Muy Claro (LavenderBlush más claro) */
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+section {
+    margin-bottom: 40px;
+    padding: 20px;
+    border-bottom: 1px solid #DDA0DD; /* Ciruela Pastel (Plum) */
+}
+
+section:last-child {
+    border-bottom: none;
+}
+
+h2 {
+    font-family: 'Playfair Display', serif; /* Fuente llamativa para h2 */
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    border-bottom: 2px solid #BA55D3; /* Orquídea Media */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.boton {
+    font-family: 'Montserrat', sans-serif; /* Consistencia con el cuerpo */
+    display: inline-block;
+    background-color: #EE82EE; /* Violeta Pastel (Violet) */
+    color: #F8F0FF; /* Lila Pastel Muy Claro */
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin: 10px 5px;
+    transition: background-color 0.3s ease;
+}
+
+.boton:hover {
+    background-color: #DDA0DD; /* Ciruela Pastel (Plum) ligeramente más oscuro */
+}
+
+.botones-hero {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Sección de Proyectos Destacados */
+.mis-proyectos-destacados {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #F5EEFF; /* Morado Claro (Thistle) ligeramente más claro */
+}
+
+.mis-proyectos-destacados h2 {
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    font-family: 'Georgia', serif; /* O la fuente que estés usando */
+}
+
+.proyectos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    /* --- CAMBIO AQUÍ: Alinea las columnas del grid al inicio (izquierda) del contenedor --- */
+    justify-content: start; /* Antes era 'center' */
+    /* --- El siguiente se mantiene para centrar el contenido DENTRO de cada tarjeta --- */
+    justify-items: center; /* Centra los elementos horizontalmente dentro de cada celda del grid */
+    align-items: stretch; /* Asegura que las tarjetas se estiren verticalmente si es necesario */
+    max-width: 900px; /* O el ancho máximo que desees para el contenedor del grid */
+    margin: 0 auto; /* Centra el contenedor del grid en la página */
+}
+
+/* Estilos para hacer toda la tarjeta de proyecto clicable */
+.proyecto-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.proyecto-card-link:hover .proyecto-card {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Opcional: Asegura que el color del texto sea el correcto */
+.proyecto-card-link .proyecto-card h3,
+.proyecto-card-link .proyecto-card p,
+.proyecto-card-link .proyecto-card span {
+    color: inherit;
+}
+
+.proyecto-card {
+    background-color: #E6E6FA; /* Lavanda (Lavender) */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Centrar la imagen dentro de la tarjeta */
+.proyecto-card .project-image {
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.boton-interno-proyecto {
+    display: inline-block;
+    background-color: #BA55D3; /* Orquídea Media */
+    color: #F8F0FF; /* Lila Pastel Muy Claro */
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-top: auto;
+    transition: background-color 0.3s ease;
+    font-size: 0.9em;
+}
+
+.boton-interno-proyecto:hover {
+    background-color: #9932CC; /* Orquídea Oscura (DarkOrchid) ligeramente más oscuro */
+}
+
+
+
+footer {
+    font-family: 'Montserrat', sans-serif;
+    text-align: center;
+    padding: 20px;
+    margin-top: 30px;
+    background-color: #E6E6FA; /* Lavanda (Lavender) */
+    color: #6A5ACD; /* Azul Pizarra Medio */
+}
+
+
+.contact-form-nude {
+    background-color: #FFF0F5; /* Lila Rosado Muy Claro */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+.contact-form-nude label {
+    font-family: 'Montserrat', sans-serif;
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.contact-form-nude .heading {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    margin-bottom: 20px;
+    font-weight: bold;
+    display: block;
+    text-align: center;
+}
+
+.contact-form-nude form {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-form-nude input,
+.contact-form-nude textarea {
+    font-family: 'Montserrat', sans-serif;
+    padding: 12px;
+    border: 1px solid #DDA0DD; /* Ciruela Pastel */
+    border-radius: 5px;
+    margin-bottom: 20px;
+    background-color: #F8F0FF; /* Lila Pastel Muy Claro */
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    font-size: 1em;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.contact-form-nude textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.contact-form-nude input:focus,
+.contact-form-nude textarea:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(186, 85, 211, 0.6); /* Orquídea Media */
+    border-color: #BA55D3; /* Orquídea Media */
+    transform: scale(1.005);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
+}
+
+.contact-form-nude button[type="submit"] {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #EE82EE; /* Violeta Pastel */
+    color: #F8F0FF; /* Lila Pastel Muy Claro */
+    border: none;
+    border-radius: 5px;
+    padding: 12px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease;
+    align-self: center;
+    width: auto;
+    min-width: 150px;
+}
+
+.contact-form-nude button[type="submit"]:hover {
+    background-color: #DDA0DD; /* Ciruela Pastel (ligeramente más oscuro) */
+    transform: scale(1.02);
+}
+
+
+/* Estilos base para la imagen de perfil (TU CÓDIGO ACTUAL) */
+.foto-perfil {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.texto-encabezado {
+    max-width: 600px;
+    padding: 0 15px;
+}
+
+.boton-formulario {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #BA55D3; /* Orquídea Media */
+    color: #F8F0FF; /* Lila Pastel Muy Claro */
+    padding: 12px 24px;
+    font-size: 1em;
+    border: none;
+    border-radius: 30px; /* Botón tipo cápsula */
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    letter-spacing: 0.5px;
+}
+
+.boton-formulario:hover {
+    background-color: #9932CC; /* Orquídea Oscura (ligeramente más oscuro) */
+    transform: scale(1.01);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.icono-formulario {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    stroke: #F8F0FF; /* Lila Pastel Muy Claro para que contraste */
+    transition: transform 0.3s ease;
+}
+
+.boton-formulario:hover .icono-formulario {
+    transform: translateX(3px);
+}
+
+.navbar-principal {
+    background-color: #E6E6FA; /* Lavanda */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    padding: 15px 0;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.nav-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 20px;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: #9370DB; /* Morado Medio */
+    padding: 8px 14px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.nav-links li a:hover {
+    background-color: #BA55D3; /* Orquídea Media */
+    color: #F8F0FF; /* Lila Pastel Muy Claro */
+    transform: translateY(-1px);
+}
+
+.botones-sociales {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.boton-social {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+    color: white; /* Texto blanco para mayor visibilidad en botones de redes sociales */
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.boton-social img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Estilos específicos por plataforma */
+.instagram {
+    background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+    color: white;
+}
+
+.instagram:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+.facebook {
+    background-color: #1877F2; /* Azul de Facebook */
+    color: white;
+}
+
+.facebook:hover {
+    background-color: #166FE5;
+    transform: scale(1.05);
+}
+
+.tiktok {
+    background-color: #000000; /* Negro de TikTok */
+    color: white;
+}
+
+.tiktok:hover {
+    background-color: #333333;
+    transform: scale(1.05);
+}
+
+.buttonDownload {
+    display: inline-block;
+    position: relative;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background-color: #C3B0E6; /* Púrpura Claro (LightSteelBlue) para el botón de descarga */
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9em;
+    text-align: center;
+    text-indent: 15px;
+    font-family: 'Montserrat', sans-serif;
+    color: #6A5ACD; /* Azul Pizarra Medio */
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.buttonDownload:hover {
+    background-color: #A797D8; /* Un tono más oscuro */
+    color: #6A5ACD;
+}
+
+.buttonDownload:before, .buttonDownload:after {
+    content: ' ';
+    display: block;
+    position: absolute;
+    left: 15px;
+    top: 52%;
+}
+
+.buttonDownload:before {
+    width: 10px;
+    height: 2px;
+    border-style: solid;
+    border-width: 0 2px 2px;
+}
+
+.buttonDownload:after {
+    width: 0;
+    height: 0;
+    margin-left: 3px;
+    margin-top: -7px;
+    border-style: solid;
+    border-width: 4px 4px 0 4px;
+    border-color: transparent;
+    border-top-color: inherit;
+    animation: downloadArrow 1s linear infinite;
+    animation-play-state: paused;
+}
+
+.buttonDownload:hover:before {
+    border-color: #F5EEFF; /* Morado Claro */
+}
+
+.buttonDownload:hover:after {
+    border-top-color: #F5EEFF;
+    animation-play-state: running;
+}
+
+/* ==== RESPONSIVE DESDE 1024px EN ADELANTE ==== */
+@media (min-width: 1024px) {
+    .foto-perfil {
+        width: 130px;
+        height: 130px;
+    }
+
+    header h1 {
+        font-size: 2em;
+    }
+
+    header p {
+        font-size: 1.1em;
+    }
+}
+
+/* ==== ANIMACIÓN OPCIONAL PARA FOTO PERFIL ==== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Media query para pantallas pequeñas (si el grid tiene un minmax muy grande) */
+@media (max-width: 600px) {
+    .proyectos-grid {
+        grid-template-columns: 1fr;
+    }
+    .proyecto-card-link {
+        max-width: 350px;
+    }
+}
+
+/* Media query para pantallas pequeñas y tablets (hasta 768px) */
+@media (max-width: 768px) {
+    .header-contenido {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .foto-perfil {
+        width: 100px;
+        height: 100px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    header h1 {
+        font-size: 1.6em;
+        margin-bottom: 10px;
+    }
+
+    header p {
+        font-size: 0.9em;
+        margin-bottom: 20px;
+    }
+
+    header nav {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    header nav a {
+        padding: 8px 0;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-links li {
+        width: 90%;
+        margin-left: auto;
+        margin-right: 50px;
+    }
+
+    .nav-links li a {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px 16px;
+        border: 1px solid #DDA0DD; /* Ciruela Pastel */
+        background-color: #F8F0FF; /* Lila Pastel Muy Claro */
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .nav-links li a:hover {
+        background-color: #BA55D3; /* Orquídea Media */
+        color: #F8F0FF; /* Lila Pastel Muy Claro */
+        transform: translateY(-1px);
+    }
+}

@@ -1,0 +1,22 @@
+# entorno virtual
+env/
+venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# archivos de configuración sensibles
+.env
+
+# archivos de migración (opcional)
+*/migrations/__pycache__/
+*.log
+
+# archivos de sistema
+.DS_Store
+.idea/
+.vscode/
+
+# archivos de caché
+*.cache
+/staticfiles/
