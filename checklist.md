@@ -90,3 +90,16 @@ Este checklist refleja todos los pasos realizados hasta ahora en el proyecto **T
 
 > _“Un proyecto sólido se construye con buenas prácticas desde el primer commit.”_
 
+## ✅ Checklist para migración
+
+- [ ] Definir stack (React, Next.js, Vue...)
+
+- [ ] Crear el nuevo proyecto frontend (create-react-app, npx create-next-app, etc.)
+
+- [ ] Habilitar autenticación con JWT (Bearer <access_token>)
+
+- [ ] Consumir API DRF (axios, fetch, react-query, etc.)
+
+- [ ] Construir layout responsivo (puedes heredar parte del CSS actual)
+
+- [ ] Desplegar el frontend en un dominio/página separado (ej. Vercel, Netlify)

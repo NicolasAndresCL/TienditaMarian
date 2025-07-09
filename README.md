@@ -85,18 +85,42 @@ Incluye el token en tus peticiones:
 - Visualización responsiva en frontend con Flexbox
 ---
 ## 🧱 Estructura del proyecto
-```tiendita-marian/
-├── productos/
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   └── admin.py
-├── tiendita_marian/ (configuración)
-├── templates/
-│   └── productos/index.html
-├── staticfiles/
-├── .env
-└── checklist.md
+
+```tiendita_marian/
+├── productos/                        # App principal de productos
+│   ├── migrations/
+│   ├── templates/
+│   │   └── productos/
+│   │       └── index.html           # Vista pública con productos
+│   ├── static/
+│   │   └── productos/               # Archivos estáticos (si aplica)
+│   │       ├── css                                                     
+│   │       │   └── style.css     
+│   │       └── img
+│   ├── admin.py                     # Registro de modelos
+│   ├── apps.py
+│   ├── models.py                    # Modelo Producto
+│   ├── serializers.py               # DRF Serializers
+│   ├── views.py                     # API y vistas basadas en clase
+│   ├── urls.py                      # Rutas específicas de la app
+│   └── tests.py
+│
+├── ventas_api/                      # Configuración global del proyecto
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py                  # Configuración con .env + JWT
+│   ├── urls.py                      # URLs globales
+│   └── wsgi.py / asgi.py
+│
+│
+├── staticfiles/                     # Static files recolectados (¡ignorar en Git!)
+│
+├── manage.py
+├── .env                             # Variables sensibles (no versionar)
+├── requirements.txt                 # Todas las Instalaciones necesarias
+├── .gitignore                       # Ignora env, .env, staticfiles, etc.
+├── checklist.md                     # Guía de pasos realizados
+└── README.md                        # Documentación del proyecto
 ```
 ---
 ## 📌 Próximos pasos

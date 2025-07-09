@@ -12,7 +12,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portafolio de {{ nombre_tienda }}</title>
+    <title>{{ nombre_tienda }}</title>
     {% load static %}
     <link rel="icon" href="{% static 'productos/img/img1.jpeg' %}" type="image/png" sizes="16x16">
     <link rel="stylesheet" href="{% static 'productos/css/style.css' %}?v={% now "U" %}">
@@ -25,7 +25,7 @@
         <div class="header-contenido">
             <img src="{% static 'productos/img/img1.jpeg' %}" alt="Tu Foto" class="foto-perfil">
             <div class="texto-encabezado">
-                <h1>¡Bienvenido a la Tiendita de Marian</h1>
+                <h1>¡Bienvenido a la Tiendita de Marian!</h1>
                 <p>{{ descripcion_corta }}</p>
             </div>
         </div>

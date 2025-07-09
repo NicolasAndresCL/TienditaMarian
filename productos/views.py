@@ -5,10 +5,15 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.core.mail import send_mail
+from rest_framework import permissions # Asegúrate de importar las clases de permisos necesarias
 
 class ProductoViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.AllowAny] # Permite acceso a todos los usuarios
     queryset = Producto.objects.all().order_by('-creado')
     serializer_class = ProductoSerializer
+
+    def get_serializer_context(self):
+        return {"request": self.request}
 
 def home(request):
     productos = Producto.objects.order_by('-creado')[:200] # Limit to 200 products
