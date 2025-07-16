@@ -1,6 +1,7 @@
 # productos/serializers.py
 from rest_framework import serializers
 from .models import Producto
+from drf_spectacular.utils import extend_schema_field
 
 class ProductoSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField() # ¡CAMBIADO A 'image'!
@@ -9,8 +10,9 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = Producto
         fields = '__all__'
 
-    def get_image(self, obj): # ¡CAMBIADO A 'get_image'!
+    @extend_schema_field(str)
+    def get_image(self, obj) -> str:
         request = self.context.get('request')
-        if obj.image: # ¡CAMBIADO A 'obj.image'!
+        if obj.image:
             return request.build_absolute_uri(obj.image.url)
         return None
