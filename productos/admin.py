@@ -1,5 +1,7 @@
+
 from django.contrib import admin
-from .models import Producto  # o el nombre de tu modelo
+from .models import Producto
+
 
 admin.site.register(Producto)
 from .carrito_models import Carrito, ItemCarrito, Orden, ItemOrden

@@ -1,10 +1,9 @@
-# productos/serializers.py
 from rest_framework import serializers
 from .models import Producto
 from drf_spectacular.utils import extend_schema_field
 
 class ProductoSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField() # ¡CAMBIADO A 'image'!
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Producto

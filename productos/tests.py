@@ -1,42 +1,25 @@
-# productos/tests.py
 from django.test import TestCase
 from .models import Producto
 from decimal import Decimal # Necesario para trabajar con DecimalField
 
+
 class ProductoModelTest(TestCase):
-    """
-    Clase de test unitario para el modelo Producto.
-    """
 
     def setUp(self):
-        """
-        Configura los datos iniciales para los tests.
-        Este método se ejecuta antes de cada test.
-        """
-        # Crea un producto de ejemplo que se usará en múltiples tests
         self.producto = Producto.objects.create(
             nombre="Carrito Didáctico Aprendizaje",
             descripcion="Un carrito didáctico ideal para el desarrollo de los niños.",
-            precio=Decimal('3000.00'), # Usa Decimal para precios
+            precio=Decimal('3000.00'),
             stock=10
-            # image no se especifica aquí, ya que es opcional (blank=True, null=True)
-            # y auto_now_add se encarga de 'creado'
         )
 
     def test_producto_creation(self):
-        """
-        Verifica que se puede crear un producto y que sus atributos son correctos.
-        """
-        # Recupera el producto de la base de datos para asegurar que se guardó
         producto_guardado = Producto.objects.get(nombre="Carrito Didáctico Aprendizaje")
-
-        # Comprueba que el producto se creó correctamente
         self.assertEqual(producto_guardado.nombre, "Carrito Didáctico Aprendizaje")
         self.assertEqual(producto_guardado.descripcion, "Un carrito didáctico ideal para el desarrollo de los niños.")
         self.assertEqual(producto_guardado.precio, Decimal('3000.00'))
         self.assertEqual(producto_guardado.stock, 10)
-        self.assertIsNotNone(producto_guardado.creado) # Verifica que la fecha de creación no es nula
-        # CORRECCIÓN AQUÍ: Comprueba que la imagen es "falsa" (no tiene un archivo asociado)
+        self.assertIsNotNone(producto_guardado.creado)
         self.assertFalse(producto_guardado.image)
 
     def test_str_representation(self):

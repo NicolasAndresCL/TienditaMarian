@@ -42,7 +42,6 @@ class ItemOrden(models.Model):
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre}"
 
-# Señal para enviar email al crear una orden
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail

@@ -5,10 +5,10 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.core.mail import send_mail
-from rest_framework import permissions # Asegúrate de importar las clases de permisos necesarias
+from rest_framework import permissions
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny] # Permite acceso a todos los usuarios
+    permission_classes = [permissions.AllowAny]
     queryset = Producto.objects.all().order_by('-creado')
     serializer_class = ProductoSerializer
 
@@ -16,7 +16,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
         return {"request": self.request}
 
 def home(request):
-    productos = Producto.objects.order_by('-creado')[:200] # Limit to 200 products
+    productos = Producto.objects.order_by('-creado')[:200]
 
     context = {
         'productos': productos,
@@ -29,9 +29,9 @@ def home(request):
         email = request.POST.get('email')
         message = request.POST.get('message')
 
-        print(f"DEBUG: Formulario recibido - Nombre: {name}, Email: {email}, Mensaje: {message}") # Para depuración
+        print(f"DEBUG: Formulario recibido - Nombre: {name}, Email: {email}, Mensaje: {message}")
 
-        if name and email and message: # Verifica que los campos no estén vacíos
+        if name and email and message:
             subject = f'Mensaje de contacto de tu Tiendita - {name}'
             email_message = f'Nombre: {name}\n' \
                             f'Email: {email}\n\n' \
