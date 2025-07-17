@@ -1,6 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
-from .carrito_models import Carrito, ItemCarrito, Orden, ItemOrden
-from .carrito_serializers import CarritoSerializer, ItemCarritoSerializer, OrdenSerializer
+from productos.carrito_models import Carrito, ItemCarrito, Orden, ItemOrden
+from productos.serializers.carrito_serializers import CarritoSerializer, ItemCarritoSerializer, OrdenSerializer
 from productos.models import Producto
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -106,8 +106,8 @@ class UpdateCantidadCarritoView(APIView):
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .carrito_models import Carrito, ItemCarrito, Orden, ItemOrden
-from .carrito_serializers import CarritoSerializer, ItemCarritoSerializer, OrdenSerializer
+from productos.carrito_models import Carrito, ItemCarrito, Orden, ItemOrden
+from productos.serializers.carrito_serializers import CarritoSerializer, ItemCarritoSerializer, OrdenSerializer
 from productos.models import Producto
 from django.shortcuts import get_object_or_404
 from django.db import transaction

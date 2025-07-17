@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .carrito_views import CarritoViewSet, CheckoutViewSet, OrdenListView, OrdenDetailView, UpdateCantidadCarritoView
+from productos.views.carrito_views import CarritoViewSet, CheckoutViewSet, OrdenListView, OrdenDetailView, UpdateCantidadCarritoView
 
 carrito_list = CarritoViewSet.as_view({'get': 'list'})
 carrito_add = CarritoViewSet.as_view({'post': 'add'})

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Producto
+from productos.models import Producto
 from drf_spectacular.utils import extend_schema_field
 
 class ProductoSerializer(serializers.ModelSerializer):

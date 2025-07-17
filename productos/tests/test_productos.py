@@ -1,10 +1,8 @@
 from django.test import TestCase
-from .models import Producto
-from decimal import Decimal # Necesario para trabajar con DecimalField
-
+from productos.models import Producto
+from decimal import Decimal
 
 class ProductoModelTest(TestCase):
-
     def setUp(self):
         self.producto = Producto.objects.create(
             nombre="Carrito Didáctico Aprendizaje",

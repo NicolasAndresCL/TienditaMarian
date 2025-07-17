@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .carrito_models import Carrito, ItemCarrito, Orden, ItemOrden
+from productos.carrito_models import Carrito, ItemCarrito, Orden, ItemOrden
 from productos.models import Producto
 
 class ProductoSimpleSerializer(serializers.ModelSerializer):
