@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from productos.views.carrito_views import CarritoViewSet, CheckoutViewSet, OrdenListView, OrdenDetailView, UpdateCantidadCarritoView
+from carrito.views import CarritoViewSet, CheckoutViewSet, UpdateCantidadCarritoView
 
 carrito_list = CarritoViewSet.as_view({'get': 'list'})
 carrito_add = CarritoViewSet.as_view({'post': 'add'})
@@ -14,7 +14,5 @@ urlpatterns = [
     path('carrito/remove/', carrito_remove, name='carrito-remove'),
     path('carrito/clear/', carrito_clear, name='carrito-clear'),
     path('checkout/', checkout, name='checkout'),
-    path('ordenes/', OrdenListView.as_view(), name='ordenes-list'),
-    path('ordenes/<int:pk>/', OrdenDetailView.as_view(), name='ordenes-detail'),
     path('carrito/update-cantidad/', UpdateCantidadCarritoView.as_view(), name='carrito-update-cantidad'),
 ]

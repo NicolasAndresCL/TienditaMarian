@@ -7,6 +7,5 @@ from productos.views.home_view import home
 
 urlpatterns = [
     path('',  home, name='home'),
-    path('', include('productos.carrito_urls')),
     path('productos/', ProductoViewSet.as_view({'get': 'list'}), name='producto-list'),
 ]

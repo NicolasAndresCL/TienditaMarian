@@ -1,22 +1,19 @@
-
 # 🛍️ Tiendita de Marian
 
-**Tiendita de Marian** es una tienda en línea creada con Django y Django REST Framework. Ofrece una API robusta, segura y desacoplada para la gestión de productos y compras, incluyendo autenticación JWT, carrito de compras, checkout, historial de órdenes, webhooks de email, paginación, filtros avanzados, pruebas automáticas y documentación OpenAPI lista para producción.
+**Tiendita de Marian** es una tienda en línea construida con Django y Django REST Framework. Ofrece una API robusta, segura y modular para la gestión de productos, usuarios y compras. Incluye autenticación JWT, carrito de compras persistente, checkout, historial de órdenes, notificaciones por email, documentación OpenAPI sin warnings, y pruebas automáticas por dominio.
 
 ---
-
 
 ## 📦 Tech Stack
 
 - **Backend**: Django 5 + Django REST Framework
 - **Autenticación**: JWT (`djangorestframework-simplejwt`)
-- **Carrito y Checkout**: Lógica desacoplada, endpoints RESTful
 - **Documentación**: OpenAPI/Swagger (`drf-spectacular`)
-- **Webhooks**: Notificación por email al crear órdenes
 - **Seguridad**: Variables protegidas con `.env` (`python-decouple`)
-- **Pruebas**: Unitarias con Django TestCase
+- **Pruebas**: Unitarias con `TestCase` por módulo
+- **Base de datos**: SQLite (desarrollo) / MySQL o PostgreSQL (producción-ready)
 - **Versionado**: Git
-- **Base de datos**: SQLite (desarrollo) / MySQL (producción-ready)
+- **Despliegue sugerido**: Render / Railway / Vercel
 
 ---
 
@@ -29,134 +26,181 @@ python -m venv env
 source env/bin/activate  # en Windows: env\Scripts\activate
 pip install -r requirements.txt
 ```
----
+## 🔐 Configuración
+Crea un archivo `.env` en la raíz del proyecto:`
 
-## Configura el archivo .env con tu SECRET_KEY:
-
-```SECRET_KEY='tu_clave_segura'
 ```
----
-
-## Aplica migraciones:
+SECRET_KEY='tu_clave_segura'
+DEBUG=True
+EMAIL_HOST_USER='tu_correo@gmail.com'
+EMAIL_HOST_PASSWORD='tu_contraseña_app'
+```
+## 🧩 Migraciones y ejecución
 
 ```bash
 python manage.py makemigrations
 python manage.py migrate
-```
----
-
-## Ejecuta el servidor:
-
-```bash
 python manage.py runserver
 ```
----
 
-## 🔐 JWT Authentication
+## 🔐 Autenticación JWT + Registro
 
-Obtención de token:
+La API incluye endpoints para login, refresh y registro de usuarios con validaciones y autologin.
 
-```POST /api/token/
+__Endpoints__
+- POST /api/auth/register/ Registra un nuevo usuario y devuelve el token automáticamente.
+
+- POST /api/auth/token/ Autentica al usuario y devuelve el token JWT.
+
+- POST /api/auth/token/refresh/ Refresca el token usando el refresh token.
+
+__Validaciones__
+- Email único
+- Contraseñas coincidentes
+- Longitud mínima de contraseña
+
+Ejemplo de respuesta al registrar:
+```
+json
 {
-  "username": "tu_usuario",
-  "password": "tu_contraseña"
+  "message": "Usuario creado exitosamente",
+  "usuario": {
+    "username": "nicolas",
+    "email": "nicolas@example.com"
+  },
+  "token": {
+    "access": "eyJ0eXAiOiJKV1QiLCJh...",
+    "refresh": "eyJ0eXAiOiJKV1QiLCJh..."
+  }
 }
 ```
-
-Refresh token:
-
-```POST /api/token/refresh/
-{
-  "refresh": "tu_refresh_token"
-}
-```
-
-Incluye el token en tus peticiones:
-
-```Authorization: Bearer <access_token>
-```
----
-
 ## 🛠️ Features
+- CRUD de productos con paginación y filtros
 
-- CRUD de productos
 - Carrito de compras persistente por usuario (añadir, eliminar, actualizar cantidades)
+
 - Checkout y creación de órdenes
+
 - Historial de órdenes paginado y filtrable por usuario
+
 - Detalle de orden específica
+
 - Endpoints protegidos con JWT (access y refresh tokens)
+
 - Webhook: notificación por email al crear una orden
-- Documentación OpenAPI/Swagger autogenerada y sin warnings
-- Pruebas automáticas para carrito, checkout y notificaciones
+
+- Documentación OpenAPI/Swagger autogenerada y agrupada por dominio
+
+- Pruebas automáticas por módulo (productos, carrito, orden, auth_api)
+
 - Backend modular, desacoplado y listo para producción
+
 - Admin interface habilitada para gestión rápida
----
+
 ## 🧱 Estructura del proyecto
 
-```tiendita-backend-django/
-├── productos/                        # App principal de productos y carrito
-│   ├── migrations/
-│   ├── templates/
-│   │   └── productos/
-│   ├── static/
-│   │   └── productos/               # Archivos estáticos (si aplica)
-│   ├── admin.py                     # Registro de modelos
-│   ├── apps.py
-│   ├── models.py                    # Modelo Producto
-│   ├── serializers.py               # DRF Serializers (Producto)
-│   ├── views.py                     # API productos
-│   ├── urls.py                      # Rutas productos
-│   ├── tests.py
-│   ├── carrito_models.py            # Modelos: Carrito, ItemCarrito, Orden, ItemOrden
-│   ├── carrito_serializers.py       # Serializers: Carrito, Orden, etc.
-│   ├── carrito_views.py             # Endpoints: carrito, checkout, historial, detalle orden
-│   ├── carrito_urls.py              # Rutas carrito/orden
-│
-├── ventas_api/                      # Configuración global del proyecto
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py                  # Configuración con .env, JWT, email, CORS
-│   ├── urls.py                      # URLs globales
-│   └── wsgi.py
-│
-├── staticfiles/                     # Static files recolectados (¡ignorar en Git!)
-├── manage.py
-├── .env                             # Variables sensibles (no versionar)
-├── requirements.txt                 # Instalaciones necesarias
-├── .gitignore                       # Ignora env, .env, staticfiles, etc.
-├── checklist.md                     # Guía de pasos realizados
-└── README.md                        # Documentación del proyecto
 ```
----
+tiendita-backend-django/
+│
+├── ventas_api/                  # Configuración global del proyecto
+│   ├── settings.py              # Configuración con .env, JWT, email, CORS
+│   ├── urls.py                  # URLs globales por dominio
+│   ├── checklist.md             # Tareas técnicas y próximos pasos
+│   ├── README_SETTING.md        # Documentación específica de configuración
+│
+├── productos/                   # CRUD de productos y lógica compartida con carrito
+│   ├── views/
+│   │   ├── home_view.py
+│   │   └── producto_views.py
+│   ├── serializers/
+│   │   └── producto_serializers.py
+│   ├── services/
+│   │   └── carrito_service.py
+│   ├── tests/
+│   │   ├── test_home.py
+│   │   └── test_productos.py
+│   └── urls.py
+
+├── carrito/                     # Lógica de carrito y checkout
+│   ├── views/
+│   │   └── carrito_views.py
+│   ├── serializers/
+│   │   └── carrito_serializers.py
+│   ├── tests/
+│   │   └── test_carrito.py
+│   └── urls/
+│       └── carrito_urls.py
+
+├── orden/                       # Gestión de órdenes y señales
+│   ├── views.py
+│   ├── serializers.py
+│   ├── signals.py
+│   ├── tests.py
+│   └── urls.py
+
+├── auth_api/                    # Autenticación JWT y registro de usuarios
+│   ├── views/
+│   │   └── auth_views.py
+│   ├── serializers/
+│   │   └── auth_serializers.py
+│   ├── tests/
+│   │   └── test_auth.py
+│   └── urls/
+│       └── auth_urls.py
+
+├── staticfiles/                 # Archivos estáticos recolectados
+├── manage.py
+├── requirements.txt
+├── .env
+├── .gitignore
+└── README.md
+```
+
+## 🧪 Pruebas
+
+```bash
+python manage.py test
+```
+## 📜 Documentación
+```bash
+python manage.py generate_swagger
+```
+La documentación de la API está disponible en `/api/docs/` y se genera automáticamente con `drf-spectacular`. Incluye todos los endpoints, parámetros, respuestas y ejemplos.
 
 ## 📌 Avances realizados
+[x] Modularización por dominio (productos, carrito, orden, auth_api)
 
-- [x] Sistema de carrito de compras y checkout 100% funcional
-- [x] Endpoints protegidos con JWT (login, refresh, autorización)
-- [x] Historial de órdenes paginado y filtrable por usuario
-- [x] Endpoint para ver detalle de una orden específica
-- [x] Endpoint para actualizar cantidad de un producto en el carrito
-- [x] Webhook: notificación por email al crear una orden
-- [x] Documentación OpenAPI/Swagger sin warnings (drf-spectacular)
-- [x] Pruebas automáticas para carrito, checkout y notificaciones
-- [x] Organización de imágenes y archivos estáticos
-- [x] Limpieza de warnings/errores en documentación y código
+[x] Autenticación JWT con registro y autologin
+
+[x] Documentación Swagger agrupada por tags personalizados
+
+[x] Webhook de email al crear orden
+
+[x] Pruebas automáticas por módulo
+
+[x] Configuración desacoplada con .env
+
+[x] Checklist técnico y documentación por app
 
 ## 🚀 Próximos pasos sugeridos
+[ ] Vista personalizada de login con JWT
 
-- [ ] Vista personalizada de login con JWT
-- [ ] Roles y permisos avanzados por tipo de usuario
-- [ ] Conexión a PostgreSQL o MySQL en producción
-- [ ] Despliegue (Render / Railway / Vercel)
-- [ ] Integración frontend (React + Vite)
+[ ] Roles y permisos avanzados por tipo de usuario
 
----
+[ ] Conexión a PostgreSQL o MySQL en producción
 
+[ ] Despliegue en Render / Railway / Vercel
+
+[ ] Integración frontend (React + Vite)
+
+[ ] Tests de integración y cobertura con Pytest
 
 ## 🧑‍💻 Autor
-Nicolás Andrés Cano Leal — Backend Developer especializado en APIs robustas con Django REST Framework y FastAPI.
+Nicolás Andrés Cano Leal — Backend Developer especializado en APIs robustas con Django REST Framework, FastAPI y Flask.
 
 “Una tienda simple hecha con principios sólidos: escalabilidad, seguridad y código limpio.”
 
-
----
+nicolasandres.pythonanywhere.com
+github.com/nicolasandrescl
+linkedin.com/in/nicolas-andres-cano-leal
+nicolas.cano.leal@gmail.com

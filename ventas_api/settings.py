@@ -9,17 +9,6 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-import os
-from pathlib import Path
-from datetime import timedelta
-from decouple import config
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
@@ -38,6 +27,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     'productos',
+    'carrito',
+    'orden',
+    'auth_api',
 ]
 
 MIDDLEWARE = [
