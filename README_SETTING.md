@@ -100,12 +100,71 @@ DATABASES_USER=tu_usuario_mysql
 DATABASES_PASSWORD=tu_password_mysql
 ```
 
-## ✅ Pendientes sugeridos
 
-- Agregar paginación y filtros en views.py
+## 🌍 Refactor técnico y mejora visual de documentación
+Durante esta etapa de optimización, se implementaron los siguientes cambios para profesionalizar el backend y su documentación:
 
-- Habilitar subida de imágenes desde el frontend
+## 🔧 Vistas refactorizadas con GenericAPIView + mixins
+Se migraron las vistas de las apps productos, orden, carrito y auth_api a clases basadas en GenericAPIView con mixins específicos (ListModelMixin, CreateModelMixin, etc.). Esto permitió:
 
-- Implementar permisos por rol
+Separación clara por acción (listar, crear, eliminar, etc.).
 
-- Agregar tests unitarios y de integración
+Trazabilidad de código y modularidad por endpoint.
+
+Facilidad para testing y documentación por clase.
+
+## 🔄 Paginación en vistas de listados
+Se incorporó PageNumberPagination en:
+
+ProductoListView
+
+OrdenListView
+
+Otros endpoints GET que devuelven listados extensos
+
+Esto mejora la experiencia de navegación en Swagger UI y en clientes frontend.
+
+## 🎨 Decoración completa de Swagger UI
+Se decoró tanto la columna izquierda (nombres de operación) como el panel derecho (contenido detallado por endpoint) usando @extend_schema y @extend_schema_view. Cada vista incluye ahora:
+
+operation_id: nombre semántico del endpoint (listar_productos, checkout_orden)
+
+summary y description: explicación visible en Swagger
+
+tags: agrupación visual por app (Productos, Órdenes, Autenticación, etc.)
+
+examples: visualización de requests/responses
+
+responses: definición clara por código HTTP (200, 201, 404, etc.)
+
+## ⚙️ Configuración avanzada en SPECTACULAR_SETTINGS
+Se mejoró la presentación del schema OpenAPI con:
+
+Propiedad	                |Descripción
+:--------------------------:|----------------------
+TITLE	                    |Tiendita de Marian API 📦
+DESCRIPTION	                |Descripción visual para onboarding y entrevistas técnicas
+CONTACT / LICENSE	        |Branding personal y licencia MIT
+SECURITY / securitySchemes	|Autenticación JWT documentada en Swagger UI
+displayOperationId	        |Activado para mostrar los nombres de operación en Swagger
+SWAGGER_UI_SETTINGS	        |UX mejorada: duración de peticiones, autorización persistente
+
+🧭 URLs organizadas por módulo
+Se reorganizaron los archivos urls.py de cada app y el principal (ventas_api/urls.py) para:
+
+Agrupar rutas bajo prefijos explícitos (api/productos/, api/carrito/, etc.)
+
+Enrutar vistas modulares y refactorizadas
+
+Exponer el esquema visual vía swagger-ui, redoc y schema
+
+✨ Resultado
+La API está lista para:
+
+Integrarse con frontend multiplataforma
+
+Ser navegada visualmente por reclutadores o colaboradores
+
+Exportar su schema OpenAPI como documentación formal
+
+Escalar fácilmente con permisos, filtros, roles y nuevos módulos
