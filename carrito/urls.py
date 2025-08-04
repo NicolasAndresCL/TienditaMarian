@@ -1,18 +1,18 @@
 from django.urls import path
-from rest_framework.routers import DefaultRouter
-from carrito.views import CarritoViewSet, CheckoutViewSet, UpdateCantidadCarritoView
-
-carrito_list = CarritoViewSet.as_view({'get': 'list'})
-carrito_add = CarritoViewSet.as_view({'post': 'add'})
-carrito_remove = CarritoViewSet.as_view({'post': 'remove'})
-carrito_clear = CarritoViewSet.as_view({'post': 'clear'})
-checkout = CheckoutViewSet.as_view({'post': 'create'})
+from carrito.views import (
+    CarritoDetailView,
+    AddItemCarritoView,
+    RemoveItemCarritoView,
+    UpdateCantidadCarritoView,
+    ClearCarritoView,
+    CheckoutView,
+)
 
 urlpatterns = [
-    path('carrito/', carrito_list, name='carrito-list'),
-    path('carrito/add/', carrito_add, name='carrito-add'),
-    path('carrito/remove/', carrito_remove, name='carrito-remove'),
-    path('carrito/clear/', carrito_clear, name='carrito-clear'),
-    path('checkout/', checkout, name='checkout'),
+    path('carrito/', CarritoDetailView.as_view(), name='carrito-detail'),
+    path('carrito/add/', AddItemCarritoView.as_view(), name='carrito-add'),
+    path('carrito/remove/', RemoveItemCarritoView.as_view(), name='carrito-remove'),
     path('carrito/update-cantidad/', UpdateCantidadCarritoView.as_view(), name='carrito-update-cantidad'),
+    path('carrito/clear/', ClearCarritoView.as_view(), name='carrito-clear'),
+    path('carrito/checkout/', CheckoutView.as_view(), name='carrito-checkout'),
 ]

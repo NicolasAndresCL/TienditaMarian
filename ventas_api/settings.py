@@ -1,9 +1,4 @@
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -120,8 +115,6 @@ STATICFILES_DIRS = [
 ]
 
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -138,9 +131,18 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Tiendita de Marian API',
-    'DESCRIPTION': 'Documentación de la API para la Tiendita de Marian',
+    'DESCRIPTION': 'Documentación completa de la API para la gestión de productos, ventas y usuarios en la Tiendita de Marian.',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    'CONTACT': {
+        'name': 'Soporte de la Tiendita',
+        'email': 'nicolas.cano.leal@gmail.com',
+    },
+    'LICENSE': {
+        'name': 'Licencia MIT',
+        'url': 'https://opensource.org/licenses/MIT',
+    },
+
+
     'SECURITY': [
         {'BearerAuth': []},
     ],
@@ -153,8 +155,58 @@ SPECTACULAR_SETTINGS = {
             }
         }
     },
-}
 
+    'SERVERS': [
+        {
+            'url': 'http://127.0.0.1:8000/api/',
+            'description': 'Servidor de Desarrollo Local',
+        },
+    ],
+
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_SPLIT_PATCH': True,
+
+    'SERVE_INCLUDE_SCHEMA': False, 
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,          
+        'displayRequestDuration': True, 
+        'filter': True,               
+        'persistAuthorization': True, 
+        'syntaxHighlight.theme': 'obsidian', 
+        'displayOperationId': True,   
+    },
+    'REDOC_UI_SETTINGS': {
+        'pathInMiddlePanel': True,   
+        'theme': {
+            'typography': {
+                'fontFamily': '"Inter", sans-serif',
+            },
+            'colors': {
+                'primary': {
+                    'main': '#0ea5e9'
+                }
+            }
+        }
+    },
+    'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
+    'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@latest',
+
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+    ],
+
+    'RENDERER_WHITELIST': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'AUTHENTICATION_WHITELIST': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+
+    'SORT_OPERATIONS': True,
+    'ENFORCE_NON_BLANK_FIELDS': True, 
+    'CAMELIZE_NAMES': True, 
+
+}
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -186,3 +238,10 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
 ]
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
