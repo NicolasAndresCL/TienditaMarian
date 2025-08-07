@@ -6,6 +6,7 @@ __pycache__/
 
 # archivos de configuración sensibles
 .env
+.env*
 
 # archivos de migración (opcional)
 */migrations/__pycache__/

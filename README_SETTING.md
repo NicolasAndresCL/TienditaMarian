@@ -100,6 +100,13 @@ DATABASES_USER=tu_usuario_mysql
 DATABASES_PASSWORD=tu_password_mysql
 ```
 
+### 🧪 Selección de entorno automático
+- `.env.dev` para desarrollo local
+- `.env.main` para producción
+- Git hook `post-checkout` selecciona el entorno según la rama
+- Variable `ENV_FILE` determina qué archivo se carga
+
+
 
 ## 🌍 Refactor técnico y mejora visual de documentación
 Durante esta etapa de optimización, se implementaron los siguientes cambios para profesionalizar el backend y su documentación:

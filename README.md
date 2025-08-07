@@ -108,7 +108,7 @@ tiendita-backend-django/
 │   ├── checklist.md             # Tareas técnicas y próximos pasos
 │   ├── README_SETTING.md        # Documentación específica de configuración
 │
-├── productos/                   # CRUD de productos y lógica compartida con carrito
+├── productos/              # CRUD de productos y lógica compartida con carrito
 │   ├── views/
 │   │   ├── home_view.py
 │   │   └── producto_views.py
@@ -166,6 +166,17 @@ python manage.py test
 python manage.py generate_swagger
 ```
 La documentación de la API está disponible en `/api/docs/` y se genera automáticamente con `drf-spectacular`. Incluye todos los endpoints, parámetros, respuestas y ejemplos.
+
+### 🪝 Git Hooks personalizados
+
+Este proyecto utiliza hooks versionables para automatizar tareas:
+
+- `post-checkout`: selecciona automáticamente el entorno `.env` según la rama (`main` o `dev`)
+- Ubicados en `.githooks/` y activados con:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## 📌 Avances realizados
 [x] Modularización por dominio (productos, carrito, orden, auth_api)
