@@ -1,2 +1,6 @@
-# Normalizar finales de línea
-* text=auto
+# Normaliza todos los archivos de texto a LF en el repo
+* text=auto eol=lf
+
+# Archivos específicos que deben mantener CRLF (si los hay)
+*.bat text eol=crlf
+*.ps1 text eol=crlf

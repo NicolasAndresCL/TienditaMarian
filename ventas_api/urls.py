@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from productos.views.home_view import home
+from apps.productos.views.home_view import home
 
 from drf_spectacular.views import (
     SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
@@ -17,10 +17,16 @@ urlpatterns = [
     path('', home, name='home'),
 
     # 📦 Módulos API agrupados
-    path('api/productos/', include('productos.urls')),
-    path('api/carrito/', include('carrito.urls')),
-    path('api/ordenes/', include('orden.urls')),
-    path('api/auth/', include('auth_api.urls')),
+    path('api/productos/', include('apps.productos.urls')),
+    path('api/carrito/', include('apps.carrito.urls.carrito_urls')),
+    path('api/orden/', include('apps.orden.urls')),
+    path('api/pagos/', include('apps.pagos.urls')),
+    path('api/envios/', include('apps.envios.urls')),
+    path('api/notificaciones/', include('apps.notificaciones.urls')),
+    path('api/descuentos/', include('apps.descuentos.urls')),
+    path('api/reviews/', include('apps.reviews.urls')),
+    path('api/analytics/', include('apps.analytics.urls')),
+    path('api/auth/', include('apps.auth_api.urls')),
 
     # 📘 Documentación Swagger/OpenAPI
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

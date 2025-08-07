@@ -106,6 +106,21 @@ DATABASES_PASSWORD=tu_password_mysql
 - Git hook `post-checkout` selecciona el entorno según la rama
 - Variable `ENV_FILE` determina qué archivo se carga
 
+### 🗂️ Estructura modular bajo apps/
+
+Todas las apps del proyecto están organizadas bajo el directorio `apps/` para facilitar la escalabilidad y trazabilidad:
+
+- `auth_api`: autenticación JWT
+- `productos`: catálogo y lógica de productos
+- `carrito`: lógica de carrito y checkout
+- `orden`: gestión de órdenes
+- `pagos`: integración con pasarelas
+- `envios`: cálculo y seguimiento de envíos
+- `notificaciones`: correos y alertas
+- `descuentos`: cupones y promociones
+- `reviews`: reseñas y ratings
+- `analytics`: KPIs y dashboards
+
 
 
 ## 🌍 Refactor técnico y mejora visual de documentación

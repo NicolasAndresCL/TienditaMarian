@@ -5,7 +5,8 @@ import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-print(f"🔧 Cargando configuración desde: {ENV_FILE}")
+ENV_FILE = os.path.join(BASE_DIR, '.env')
+print(f" Cargando configuracion desde: {ENV_FILE}")
 
 env = environ.Env()
 environ.Env.read_env()
@@ -26,10 +27,16 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'drf_spectacular',
-    'productos',
-    'carrito',
-    'orden',
-    'auth_api',
+    'apps.pagos',
+    'apps.envios',
+    'apps.notificaciones',
+    'apps.descuentos',
+    'apps.reviews',
+    'apps.analytics',
+    'apps.productos',
+    'apps.carrito',
+    'apps.orden',
+    'apps.auth_api',
 ]
 
 MIDDLEWARE = [
