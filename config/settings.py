@@ -9,7 +9,7 @@ ENV_FILE = os.path.join(BASE_DIR, '.env')
 print(f" Cargando configuracion desde: {ENV_FILE}")
 
 env = environ.Env()
-environ.Env.read_env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
@@ -50,7 +50,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'ventas_api.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -67,7 +67,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ventas_api.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 
 

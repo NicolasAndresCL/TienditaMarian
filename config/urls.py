@@ -18,7 +18,7 @@ urlpatterns = [
 
     # 📦 Módulos API agrupados
     path('api/productos/', include('apps.productos.urls')),
-    path('api/carrito/', include('apps.carrito.urls.carrito_urls')),
+    path('api/carrito/', include('apps.carrito.urls')),
     path('api/orden/', include('apps.orden.urls')),
     path('api/pagos/', include('apps.pagos.urls')),
     path('api/envios/', include('apps.envios.urls')),

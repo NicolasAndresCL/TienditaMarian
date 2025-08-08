@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib import messages
-from productos.models import Producto
+from apps.productos.models import Producto
 
 def home(request):
     productos = Producto.objects.order_by('-creado')[:200]

@@ -1,5 +1,5 @@
 from django.test import TestCase
-from productos.models import Producto
+from apps.productos.models import Producto
 from decimal import Decimal
 
 class ProductoModelTest(TestCase):

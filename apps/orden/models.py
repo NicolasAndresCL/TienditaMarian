@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from productos.models import Producto
+from apps.productos.models import Producto
 
 class Orden(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ordenes')

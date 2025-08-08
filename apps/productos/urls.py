@@ -1,7 +1,7 @@
 from django.urls import path
-from productos.views.home_view import home
+from apps.productos.views.home_view import home
 
-from productos.views.producto_views import (
+from apps.productos.views.producto_views import (
     ProductoListView,
     ProductoCreateView,
     ProductoDetailView,

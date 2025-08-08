@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from orden.models import  Orden, ItemOrden
+from apps.orden.models import  Orden, ItemOrden
 
 class ItemOrdenSerializer(serializers.ModelSerializer):
-    from carrito.serializers import ProductoSimpleSerializer
+    from apps.carrito.serializers import ProductoSimpleSerializer
     producto = ProductoSimpleSerializer(read_only=True)
 
     class Meta:

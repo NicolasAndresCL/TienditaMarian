@@ -1,8 +1,8 @@
 from django.test import TestCase
-from carrito.models import Carrito, ItemCarrito
+from apps.carrito.models import Carrito, ItemCarrito
 from django.contrib.auth import get_user_model
-from productos.models import Producto
-from orden.models import Orden, ItemOrden
+from apps.productos.models import Producto
+from apps.orden.models import Orden, ItemOrden
 
 class CarritoOrdenTestCase(TestCase):
 
@@ -10,5 +10,7 @@ class CarritoOrdenTestCase(TestCase):
         from django.core import mail
         ItemCarrito.objects.create(carrito=self.carrito, producto=self.producto, cantidad=1)
         orden = Orden.objects.create(usuario=self.user, total=10)
+        self.carrito = Carrito.objects.create(usuario=self.usuario)
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('Gracias por tu compra', mail.outbox[0].subject)
+        

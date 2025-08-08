@@ -4,7 +4,7 @@ from django.apps import AppConfig
 
 class OrdenConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'orden'
+    name = 'apps.orden'
 
     def ready(self):
-        import orden.signals
+        import apps.orden.signals

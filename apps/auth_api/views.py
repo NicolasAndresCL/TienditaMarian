@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from auth_api.serializers import CustomTokenObtainPairSerializer, RegisterSerializer
+from apps.auth_api.serializers import CustomTokenObtainPairSerializer, RegisterSerializer
 from drf_spectacular.utils import (
     extend_schema_view, extend_schema,
     OpenApiExample, OpenApiResponse

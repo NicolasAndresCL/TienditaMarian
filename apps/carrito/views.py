@@ -5,12 +5,12 @@ from rest_framework.generics import GenericAPIView
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from carrito.models import Carrito, ItemCarrito
-from productos.models import Producto
-from orden.models import Orden, ItemOrden
+from apps.carrito.models import Carrito, ItemCarrito
+from apps.productos.models import Producto
+from apps.orden.models import Orden, ItemOrden
 
-from carrito.serializers import CarritoSerializer, ItemCarritoSerializer
-from orden.serializers import OrdenSerializer
+from apps.carrito.serializers import CarritoSerializer, ItemCarritoSerializer
+from apps.orden.serializers import OrdenSerializer
 
 from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiExample, OpenApiResponse
 

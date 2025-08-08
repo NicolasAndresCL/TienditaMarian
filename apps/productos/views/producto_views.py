@@ -4,8 +4,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
-from productos.models import Producto
-from productos.serializers.producto_serializers import ProductoSerializer
+from apps.productos.models import Producto
+from apps.productos.serializers.producto_serializers import ProductoSerializer
 from drf_spectacular.utils import (
     extend_schema_view, extend_schema,
     OpenApiResponse

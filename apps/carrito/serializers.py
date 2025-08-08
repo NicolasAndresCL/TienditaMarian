@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from carrito.models import Carrito, ItemCarrito
-from productos.models import Producto
+from apps.carrito.models import Carrito, ItemCarrito
+from apps.productos.models import Producto
 
 class ProductoSimpleSerializer(serializers.ModelSerializer):
     class Meta:

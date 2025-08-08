@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 
-from orden.models import Orden
-from orden.serializers import OrdenSerializer
+from apps.orden.models import Orden
+from apps.orden.serializers import OrdenSerializer
 from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiParameter, OpenApiResponse
 
 @extend_schema_view(

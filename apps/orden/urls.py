@@ -1,5 +1,5 @@
 from django.urls import path
-from orden.views import OrdenListView, OrdenDetailView
+from apps.orden.views import OrdenListView, OrdenDetailView
 
 urlpatterns = [
     path('ordenes/', OrdenListView.as_view(), name='ordenes-list'),

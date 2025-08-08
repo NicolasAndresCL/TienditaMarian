@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from productos.models import Producto
+from apps.productos.models import Producto
 
 class HomeViewTest(TestCase):
     def setUp(self):

@@ -1,8 +1,8 @@
 from django.test import TestCase
-from carrito.models import Carrito, ItemCarrito
+from apps.carrito.models import Carrito, ItemCarrito
 from django.contrib.auth import get_user_model
-from productos.models import Producto
-from orden.models import Orden, ItemOrden
+from apps.productos.models import Producto
+from apps.orden.models import Orden, ItemOrden
 
 class CarritoOrdenTestCase(TestCase):
     def setUp(self):

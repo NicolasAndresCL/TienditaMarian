@@ -1,5 +1,5 @@
 from django.urls import path
-from carrito.views import (
+from apps.carrito.views import (
     CarritoDetailView,
     AddItemCarritoView,
     RemoveItemCarritoView,
