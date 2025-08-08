@@ -1,6 +1,61 @@
-from .settings import *
+import os
+from pathlib import Path
 
-# ✅ Base de datos en memoria para tests rápidos
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = 'test-secret-key'
+DEBUG = False
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    # tus apps aquí
+    'apps.orden',
+    'apps.productos',
+    'apps.pagos',
+    'apps.envios',
+    'apps.carrito',
+    'apps.descuentos',
+    'apps.analytics',
+    'apps.reviews',
+    'apps.notificaciones',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'config.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'config.wsgi.application'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -8,22 +63,18 @@ DATABASES = {
     }
 }
 
-# ✅ Desactiva validadores de contraseña
 AUTH_PASSWORD_VALIDATORS = []
 
-# ✅ Acelera hashing de contraseñas
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
 
-# ✅ Email backend en memoria
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
-# ✅ Hosts seguros para entorno CI
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+LANGUAGE_CODE = 'es-cl'
+TIME_ZONE = 'America/Santiago'
+USE_I18N = True
+USE_TZ = True
 
-# ✅ CORS para pruebas locales
-CORS_ALLOWED_ORIGINS = ['http://127.0.0.1:8000']
-
-# ✅ Debug desactivado
-DEBUG = False
+STATIC_URL = '/static/'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
