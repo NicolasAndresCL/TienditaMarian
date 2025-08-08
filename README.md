@@ -153,9 +153,23 @@ sequenceDiagram
     Orden->>Signal: post_save
     Signal->>Notificacion: Crea notificación
 ```
-## 🚀 Próximos pasos sugeridos
-🔲 Vista personalizada de login con JWT 🔲 Roles y permisos avanzados por tipo de usuario 🔲 Conexión a PostgreSQL o MySQL en producción 🔲 Despliegue en Render / Railway / Vercel 🔲 Integración frontend (React + Vite) 🔲 Tests de integración y cobertura con Pytest
+## 🧪 Entorno de Testing para CI/CD
+Este proyecto incluye un archivo dedicado config/settings_test.py para ejecutar pruebas automatizadas en entornos CI como GitHub Actions.
 
+✅ Base de datos SQLite en memoria para mayor velocidad
+
+✅ Backend de correo local (locmem) para evitar envíos reales
+
+✅ Hashing MD5 para acelerar validación de contraseñas
+
+✅ Sin dependencia de .env ni variables sensibles
+
+✅ Compatible con GitHub Actions y testing multiplataforma (Linux, Windows, Mac)
+
+Este entorno desacoplado permite ejecutar tests de forma reproducible, rápida y segura, asegurando trazabilidad y compatibilidad internacional.
+```
+![CI](https://github.com/NicolasAndresCL/TienditaMarian/actions/workflows/test.yml/badge.svg)
+```
 ## 🧑‍💻 Autor
 Nicolás Andrés Cano Leal Backend Developer especializado en APIs robustas con Django REST Framework, FastAPI y Flask.
 
