@@ -140,6 +140,19 @@ git config core.hooksPath .githooks
 
 ✅ Modularización por dominio ✅ Autenticación JWT con registro y autologin ✅ Documentación Swagger decorada por tags ✅ Webhook de email al crear orden ✅ Pruebas automáticas por módulo ✅ Configuración desacoplada con .env ✅ Checklist técnico y documentación por app
 
+## 🔔 Signal Flow: Orden → Notificación
+
+```mermaid
+sequenceDiagram
+    participant Usuario
+    participant Orden
+    participant Signal
+    participant Notificacion
+
+    Usuario->>Orden: Crea orden
+    Orden->>Signal: post_save
+    Signal->>Notificacion: Crea notificación
+```
 ## 🚀 Próximos pasos sugeridos
 🔲 Vista personalizada de login con JWT 🔲 Roles y permisos avanzados por tipo de usuario 🔲 Conexión a PostgreSQL o MySQL en producción 🔲 Despliegue en Render / Railway / Vercel 🔲 Integración frontend (React + Vite) 🔲 Tests de integración y cobertura con Pytest
 

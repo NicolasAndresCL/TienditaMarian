@@ -1,6 +1,7 @@
 asgiref==3.9.0
 attrs==25.3.0
 colorama==0.4.6
+coverage==7.10.2
 Django==5.2.4
 django-cors-headers==4.7.0
 django-environ==0.12.0
