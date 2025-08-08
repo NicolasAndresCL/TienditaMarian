@@ -11,6 +11,7 @@ jobs:
 
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DEBUG: false
       DB_NAME: tiendita_test
       DB_USER: root
       DB_PASSWORD: root
