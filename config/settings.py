@@ -5,8 +5,9 @@ import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ENV_FILE = os.path.join(BASE_DIR, '.env')
-print(f" Cargando configuracion desde: {ENV_FILE}")
+ENV_FILE = '.env.test' if os.getenv('ENV') == 'test' else '.env'
+ENV_PATH = os.path.join(BASE_DIR, ENV_FILE)
+print(f" Cargando configuracion desde: {ENV_PATH}")
 
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))

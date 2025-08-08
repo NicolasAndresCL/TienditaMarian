@@ -10,13 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      ENV: test
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       DEBUG: false
+      ALLOWED_HOSTS: 127.0.0.1,localhost
       DB_NAME: tiendita_test
       DB_USER: root
       DB_PASSWORD: root
       DB_HOST: 127.0.0.1
       EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+
 
     steps:
       - uses: actions/checkout@v3
@@ -33,5 +36,5 @@ jobs:
 
       - name: Run tests
         run: |
-          coverage run manage.py test
+          coverage run manage.py test --settings=config.settings_test
           coverage report
