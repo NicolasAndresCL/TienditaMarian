@@ -20,3 +20,5 @@ __pycache__/
 # archivos de caché
 *.cache
 /staticfiles/
+
+.coverage
