@@ -5,6 +5,12 @@ from django.core.mail import send_mail
 from django.utils.translation import gettext_lazy as _
 from apps.productos.models import Producto
 
+ESTADOS = [
+    ('pendiente', 'Pendiente'),
+    ('enviado', 'Enviado'),
+    ('entregado', 'Entregado'),
+]
+
 class Orden(models.Model):
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -14,6 +20,7 @@ class Orden(models.Model):
     )
     creado = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de creación"))
     actualizado = models.DateTimeField(auto_now=True, verbose_name=_("Última actualización"))
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
     total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Total"))
     pagado = models.BooleanField(default=False, verbose_name=_("¿Pagado?"))
 

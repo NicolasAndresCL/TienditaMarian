@@ -22,7 +22,7 @@ from apps.orden.models import Orden
 class NotificacionSignalTest(TestCase):
     def test_signal_crea_notificacion(self):
         user = User.objects.create_user(username='signaluser', password='12345')
-        orden = Orden.objects.create(usuario=user, estado='pendiente')
+        orden = Orden.objects.create(usuario=user, estado='pendiente', total=19000)
         notificaciones = Notificacion.objects.filter(usuario=user)
         self.assertEqual(notificaciones.count(), 1)
         self.assertIn('Nueva orden creada', notificaciones.first().asunto)
