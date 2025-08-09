@@ -11,6 +11,7 @@ from drf_spectacular.utils import (
     OpenApiResponse
 )
 
+# Lista de productos (libre de autenticación)
 @extend_schema_view(
     get=extend_schema(
         operation_id="producto.list",
@@ -35,25 +36,7 @@ class ProductoListView(mixins.ListModelMixin, GenericAPIView):
         serializer = self.get_serializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-@extend_schema_view(
-    post=extend_schema(
-        operation_id="producto.create",
-        tags=["Productos"],
-        summary="Crear producto",
-        description="Crea un nuevo producto.",
-        responses={201: ProductoSerializer}
-    )
-)
-class ProductoCreateView(mixins.CreateModelMixin, GenericAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = ProductoSerializer
-
-    def get_queryset(self):
-        return Producto.objects.all()
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
+# Detalle de producto (libre de autenticación)
 @extend_schema_view(
     get=extend_schema(
         operation_id="producto.detail",
@@ -78,6 +61,27 @@ class ProductoDetailView(mixins.RetrieveModelMixin, GenericAPIView):
         serializer = self.get_serializer(producto)
         return Response(serializer.data)
 
+# Crear producto (requiere autenticación)
+@extend_schema_view(
+    post=extend_schema(
+        operation_id="producto.create",
+        tags=["Productos"],
+        summary="Crear producto",
+        description="Crea un nuevo producto.",
+        responses={201: ProductoSerializer}
+    )
+)
+class ProductoCreateView(mixins.CreateModelMixin, GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ProductoSerializer
+
+    def get_queryset(self):
+        return Producto.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+# Actualizar producto (requiere autenticación)
 @extend_schema_view(
     put=extend_schema(
         operation_id="producto.update",
@@ -88,7 +92,7 @@ class ProductoDetailView(mixins.RetrieveModelMixin, GenericAPIView):
     )
 )
 class ProductoUpdateView(mixins.UpdateModelMixin, GenericAPIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = ProductoSerializer
 
     def get_queryset(self):
@@ -97,6 +101,7 @@ class ProductoUpdateView(mixins.UpdateModelMixin, GenericAPIView):
     def put(self, request, pk, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
+# Actualizar parcialmente producto (requiere autenticación)
 @extend_schema_view(
     patch=extend_schema(
         operation_id="producto.partial_update",
@@ -107,7 +112,7 @@ class ProductoUpdateView(mixins.UpdateModelMixin, GenericAPIView):
     )
 )
 class ProductoPartialUpdateView(mixins.UpdateModelMixin, GenericAPIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = ProductoSerializer
 
     def get_queryset(self):
@@ -116,6 +121,7 @@ class ProductoPartialUpdateView(mixins.UpdateModelMixin, GenericAPIView):
     def patch(self, request, pk, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
 
+# Eliminar producto (requiere autenticación)
 @extend_schema_view(
     delete=extend_schema(
         operation_id="producto.delete",
@@ -129,7 +135,7 @@ class ProductoPartialUpdateView(mixins.UpdateModelMixin, GenericAPIView):
     )
 )
 class ProductoDeleteView(mixins.DestroyModelMixin, GenericAPIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = ProductoSerializer
 
     def get_queryset(self):

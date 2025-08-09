@@ -125,7 +125,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'productos', 'static')
+    os.path.join(BASE_DIR,'apps', 'productos', 'static')
 ]
 
 
@@ -145,7 +145,13 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Tiendita de Marian API',
-    'DESCRIPTION': 'Documentación completa de la API para la gestión de productos, ventas y usuarios en la Tiendita de Marian.',
+    'DESCRIPTION': (
+        'Documentación interactiva y bilingüe de la API REST para la gestión integral de productos, '
+        'ventas, usuarios y auditoría de eventos en la Tiendita de Marian. Incluye endpoints para '
+        'operaciones CRUD, autenticación segura, trazabilidad automática de acciones y visualización '
+        'estructurada de datos. Compatible con herramientas externas mediante OpenAPI 3.0, con '
+        'serialización desacoplada y pruebas automatizadas en CI/CD.'
+    ),
     'VERSION': '1.0.0',
     'CONTACT': {
         'name': 'Soporte de la Tiendita',

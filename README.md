@@ -170,6 +170,15 @@ Este entorno desacoplado permite ejecutar tests de forma reproducible, rápida y
 ```
 ![CI](https://github.com/NicolasAndresCL/TienditaMarian/actions/workflows/test.yml/badge.svg)
 ```
+## 🧠 Auditoría automática de eventos
+
+Esta funcionalidad registra automáticamente cada creación, actualización y eliminación de modelos relevantes en la tabla `AuditLog`, usando señales desacopladas y serialización segura con DRF.
+
+- Compatible con campos complejos (`ImageField`, `DateTimeField`, `ForeignKey`)
+- Documentado y testeado con cobertura total
+- Preparado para entornos CI/CD y producción real
+
+
 ## 🧑‍💻 Autor
 Nicolás Andrés Cano Leal Backend Developer especializado en APIs robustas con Django REST Framework, FastAPI y Flask.
 
