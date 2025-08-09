@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.carrito',
     'apps.orden',
     'apps.auth_api',
+    'apps.auditlog',
 ]
 
 MIDDLEWARE = [
