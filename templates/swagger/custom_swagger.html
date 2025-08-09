@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {% load static %}
+    <meta charset="UTF-8">
+    <title>Documentación API</title>
+
+    <!-- CSS base de Swagger -->
+    <link rel="stylesheet" href="{% static 'drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css' %}">
+    
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" href="{% static 'swagger/swagger-custom.css' %}">
+</head>
+<body>
+<div id="swagger-ui"></div>
+
+<!-- Scripts base de Swagger -->
+<script src="{% static 'drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-bundle.js' %}"></script>
+<script src="{% static 'drf_spectacular_sidecar/swagger-ui-dist/swagger-ui-standalone-preset.js' %}"></script>
+
+<!-- Inicialización -->
+<script>
+window.onload = function() {
+    SwaggerUIBundle({
+        url: "{% url 'schema' %}",
+        dom_id: '#swagger-ui',
+        presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+        ],
+        layout: "BaseLayout",
+        deepLinking: true
+    });
+};
+</script>
+</body>
+</html>

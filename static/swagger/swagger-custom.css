@@ -1,0 +1,130 @@
+/* 🎠 Fondo general con degradado suave y alegre */
+body {
+    background: url("/static/swagger/CieloPastel2.jpg") no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+/* 🎈 Barra superior estilo caramelo */
+.swagger-ui .topbar {
+    background: linear-gradient(90deg, #ff6f91, #ff9671, #ffc75f, #f9f871) !important;
+    color: white !important;
+    padding: 10px;
+}
+
+/* 🎀 Logo en la barra */
+.swagger-ui .topbar a span {
+    font-size: 22px;
+    font-weight: bold;
+    color: white !important;
+    text-shadow: 1px 1px 2px #00000033;
+}
+
+/* 🧸 Botones estilo juguete */
+.swagger-ui .btn {
+    background-color: #ff9671 !important;
+    border-radius: 15px !important;
+    color: white !important;
+    font-weight: bold;
+    border: none !important;
+    transition: transform 0.2s ease-in-out;
+}
+
+.swagger-ui .btn:hover {
+    background-color: #ff6f91 !important;
+    transform: scale(1.05);
+}
+
+/* 📦 Secciones con bordes redondeados y sombra */
+.swagger-ui .opblock {
+    border-radius: 15px;
+    border: 3px solid #ffc75f;
+    background-color: #ffffffcc;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+
+/* 🖋 Títulos coloridos */
+.swagger-ui .opblock-summary-method {
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+.swagger-ui .opblock-summary-method.get {
+    background-color: #42a5f5;
+    color: white;
+}
+
+.swagger-ui .opblock-summary-method.post {
+    background-color: #66bb6a;
+    color: white;
+}
+
+.swagger-ui .opblock-summary-method.put {
+    background-color: #ffa726;
+    color: white;
+}
+
+.swagger-ui .opblock-summary-method.delete {
+    background-color: #ef5350;
+    color: white;
+}
+
+/* 🎨 Colores de links */
+.swagger-ui a {
+    color: #ff6f91;
+}
+
+.swagger-ui a:hover {
+    color: #ff9671;
+}
+
+/* 🎯 Campos de texto más amigables */
+.swagger-ui input,
+.swagger-ui textarea {
+    border-radius: 10px;
+    border: 2px solid #ffb3c6;
+    padding: 6px;
+    background-color: #fff0f5;
+}
+
+.scheme-container {
+    background-color: transparent !important;
+}
+
+h2.title {
+    color: #FF69B4; /* Rosa chicle */
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    text-shadow: 2px 2px #FFD700; /* Sombra amarilla */
+    font-size: 2em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 1.4rem; /* Más grande */
+    line-height: 1.6;
+    font-family: 'Comic Sans MS', 'Fredoka One', cursive;
+    color: #555; /* Gris suave para no cansar la vista */
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 20px auto;
+}
+
+span.url {
+    font-weight: bold;
+    color: #FF69B4; /* Rosa chicle */
+    text-shadow: 1px 1px #FFD700; /* Sombra amarilla */
+    text-align: center;
+    display: block;
+    margin-bottom: 20px;
+}
+
+a.link {
+    font-weight: bold;
+    color: #FF69B4; /* Rosa chicle */
+    text-shadow: 1px 1px #FFD700; /* Sombra amarilla */
+    text-decoration: none;
+    text-align: center;
+    display: block;
+    margin-bottom: 20px;
+}

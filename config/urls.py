@@ -8,6 +8,10 @@ from apps.productos.views.home_view import home
 from drf_spectacular.views import (
     SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 )
+from django.shortcuts import render
+
+def custom_swagger_ui_view(request):
+    return render(request, "swagger/custom_swagger.html")
 
 urlpatterns = [
     # 🛠️ Administración
@@ -30,10 +34,11 @@ urlpatterns = [
 
     # 📘 Documentación Swagger/OpenAPI
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/swagger-ui/', custom_swagger_ui_view, name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 # 🖼️ Archivos estáticos solo en DEBUG
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

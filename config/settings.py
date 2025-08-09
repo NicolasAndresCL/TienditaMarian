@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'drf_spectacular',
+    'drf_spectacular_sidecar',
     'apps.pagos',
     'apps.envios',
     'apps.notificaciones',
@@ -57,10 +58,11 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -125,7 +127,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR,'apps', 'productos', 'static')
+    os.path.join(BASE_DIR,'static')
 ]
 
 
@@ -195,6 +197,14 @@ SPECTACULAR_SETTINGS = {
         'syntaxHighlight.theme': 'obsidian', 
         'displayOperationId': True,   
     },
+    'SWAGGER_UI_STYLES': {
+        'primaryColor': "#db34bf",
+        'secondaryColor': '#2ecc71',
+        'backgroundColor': '#f9f9f9',
+        'textColor': '#333333',
+    },
+    'TEMPLATE_DIR': 'templates/drf_spectacular_sidecar',
+    'STATIC_DIR': 'static/drf_spectacular_sidecar',
     'REDOC_UI_SETTINGS': {
         'pathInMiddlePanel': True,   
         'theme': {
