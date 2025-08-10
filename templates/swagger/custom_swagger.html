@@ -4,6 +4,8 @@
   {% load static %}
     <meta charset="UTF-8">
     <title>Documentación API</title>
+    <!-- Logo   --> 
+    <a class="link" href="#"><img src="{% static 'swagger/logo.jfif' %}" alt="Logo"><span>Documentación API</span></a>
 
     <!-- CSS base de Swagger -->
     <link rel="stylesheet" href="{% static 'drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css' %}">
@@ -29,7 +31,15 @@ window.onload = function() {
             SwaggerUIStandalonePreset
         ],
         layout: "BaseLayout",
-        deepLinking: true
+        deepLinking: true,
+        displayRequestDuration: true,
+        filter: true,
+        persistAuthorization: true,
+        displayOperationId: true,
+        docExpansion: 'none',
+        tryItOutEnabled: true,
+        displayResponses: true,
+        tagsSorter: 'alpha'  
     });
 };
 </script>

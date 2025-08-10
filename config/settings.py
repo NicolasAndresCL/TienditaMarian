@@ -199,12 +199,7 @@ SPECTACULAR_SETTINGS = {
         'syntaxHighlight.theme': 'obsidian', 
         'displayOperationId': True,   
     },
-    'SWAGGER_UI_STYLES': {
-        'primaryColor': "#db34bf",
-        'secondaryColor': '#2ecc71',
-        'backgroundColor': '#f9f9f9',
-        'textColor': '#333333',
-    },
+
     'TEMPLATE_DIR': 'templates/drf_spectacular_sidecar',
     'STATIC_DIR': 'static/drf_spectacular_sidecar',
     'REDOC_UI_SETTINGS': {
@@ -237,7 +232,10 @@ SPECTACULAR_SETTINGS = {
     'SORT_OPERATIONS': True,
     'ENFORCE_NON_BLANK_FIELDS': True, 
     'CAMELIZE_NAMES': True, 
-
+    'GENERATION': {
+        'operationId': True,     
+    },
+    'SHOW_EXTENSIONS': True,
 }
 
 SIMPLE_JWT = {
