@@ -1,18 +1,20 @@
 # 🛍️ Tiendita de Marian
 Tiendita de Marian es una tienda en línea construida con Django + Django REST Framework. Ofrece una API robusta, segura y modular para la gestión de productos, usuarios y compras. Incluye autenticación JWT, carrito persistente, checkout, historial de órdenes, notificaciones por email, documentación OpenAPI decorada sin warnings, y pruebas automáticas por dominio.
 
-## 📦 Tech Stack
-Componente	        |Tecnología / Herramienta
---------------------|------------------------------
-🧠 Backend	        |Django 5 + Django REST Framework
-🔐 Autenticación	  |JWT (djangorestframework-simplejwt)
-📘 Documentación	  |Swagger/OpenAPI (drf-spectacular)
-🔒 Seguridad	      |.env con python-decouple
-🧪 Testing	        |TestCase por módulo
-🗄️ Base de datos	    |SQLite (dev) / MySQL o PostgreSQL (producción)
-🚀 Despliegue	      |pythonanywhere
+##📦 Tech Stack
+Componente	          |Tecnología / Herramienta
+----------------------|-------------------------------------------
+🧠 Backend	         |Django 5 + Django REST Framework
+🔐 Autenticación	    |JWT (djangorestframework-simplejwt)
+📘 Documentación	    |Swagger/OpenAPI (drf-spectacular)
+🔒 Seguridad	        |.env con django-environ
+🧪 Testing	         |TestCase por módulo + settings_test.py
+🗄️ Base de datos	      |  SQLite (dev) / MySQL o PostgreSQL (producción)
+🧸 Carga masiva	      |Management commands + CSV + imágenes
+🧠 Auditoría	        |Signals + AuditLog con UUID y JSONField
+🚀 Despliegue	        |pythonanywhere
 
-## ⚙️ Instalación
+##⚙️ Instalación
 ```bash
 git clone https://github.com/tuusuario/tiendita-marian.git
 cd tiendita-marian
@@ -20,39 +22,39 @@ python -m venv env
 source env/bin/activate  # en Windows: env\Scripts\activate
 pip install -r requirements.txt
 ```
-## 🔐 Configuración
+##🔐 Configuración
 Crea un archivo .env en la raíz del proyecto:
 ```
-.env
 SECRET_KEY='tu_clave_segura'
 DEBUG=True
 EMAIL_HOST_USER='tu_correo@gmail.com'
 EMAIL_HOST_PASSWORD='tu_contraseña_app'
 ```
-## 🧩 Migraciones y ejecución
+
+##🧩 Migraciones y ejecución
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver
 ```
-## 🔐 Autenticación JWT + Registro
-- La API incluye endpoints para login, refresh y registro de usuarios con validaciones y autologin.
+##🔐 Autenticación JWT + Registro
+Endpoints disponibles:
 
-Endpoints
 - POST /api/auth/register/ → Registra un nuevo usuario y devuelve el token automáticamente
 
 - POST /api/auth/token/ → Autentica y devuelve el token JWT
 
 - POST /api/auth/token/refresh/ → Refresca el token
 
-- Validaciones
+Validaciones incluidas:
+
 - Email único
 
 - Contraseñas coincidentes
 
-- Longitud mínima de contraseña
+- Longitud mínima
 
-Ejemplo de respuesta
+Ejemplo de respuesta:
 ```
 json
 {
@@ -67,81 +69,126 @@ json
   }
 }
 ```
+##🛠️ Features
+CRUD de productos con paginación y filtros
 
-## 🛠️ Features
-- CRUD de productos con paginación y filtros
+Carrito persistente por usuario
 
-- Carrito persistente por usuario (añadir, eliminar, actualizar)
+Checkout y creación de órdenes
 
-- Checkout y creación de órdenes
+Historial de órdenes paginado y filtrable
 
-- Historial de órdenes paginado y filtrable
+Detalle de orden específica
 
-- Detalle de orden específica
+Endpoints protegidos con JWT
 
-- Endpoints protegidos con JWT
+Webhook: email automático al crear orden
 
-- Webhook: email automático al crear orden
+Documentación Swagger decorada por dominio
 
-- Documentación Swagger decorada por dominio
+Pruebas automáticas por módulo
 
-- Pruebas automáticas por módulo
+Backend modular, desacoplado y listo para producción
 
-- Backend modular, desacoplado y listo para producción
+Admin interface habilitada
 
-- Admin interface habilitada
-
-## 🧱 Estructura del proyecto
+##🧱 Estructura del proyecto
 ```bash
 tiendita-backend-django/
-├── config/                  # Configuración global del proyecto
-│   ├── settings.py          # Configuración con .env, JWT, email, CORS
-│   ├── urls.py              # URLs globales por dominio
-│   ├── checklist.md         # Tareas técnicas y próximos pasos
-│   └── README_SETTING.md    # Documentación específica de configuración
+├── config/                  # Configuración global
+│   ├── settings.py          # Config principal
+│   ├── settings_test.py     # Config para testing CI/CD
+│   ├── urls.py              # URLs globales
+│   ├── checklist.md         # Tareas técnicas
+│   └── README_SETTING.md    # Documentación técnica
 │
-├── apps/                    # Apps modulares por dominio
-│   ├── productos/           # CRUD de productos
-│   ├── carrito/             # Lógica de carrito y checkout
-│   ├── orden/               # Gestión de órdenes y señales
-│   ├── auth_api/            # Autenticación y registro
-│   └── ...                  # Otros módulos futuros
+├── apps/                    # Apps por dominio
+│   ├── productos/           # CRUD + carga masiva
+│   ├── carrito/             # Lógica de carrito
+│   ├── orden/               # Órdenes + señales
+│   ├── auth_api/            # Registro + JWT
+│   ├── auditlog/            # Auditoría automática
+│   └── ...                  # Otros módulos
 │
-├── staticfiles/             # Archivos estáticos recolectados
-├── media/                   # Imágenes subidas por usuarios
+├── staticfiles/             # Archivos estáticos
+├── media/                   # Imágenes subidas
+│   └── productos/images/    # Imágenes de productos
 ├── manage.py
 ├── requirements.txt
 ├── .env
 ├── .gitignore
 └── README.md
 ```
-## 🧪 Pruebas
+##🧪 Pruebas
 ```bash
 python manage.py test
 ```
-
 ## 📜 Documentación Swagger
 ```bash
 python manage.py generate_swagger
 ```
-- Disponible en /api/docs/ con agrupación por tags, ejemplos, responses y nombres semánticos (operation_id).
+Disponible en /api/docs/ con:
 
-- 🪝 Git Hooks personalizados
+Agrupación por tags
+
+Ejemplos y respuestas
+
+Nombres semánticos (operation_id)
+
+Decoración visual sin warnings
+```
+🪝 Git Hooks personalizados
+```
 Este proyecto incluye hooks versionables para automatizar tareas:
 
-- post-checkout: selecciona automáticamente el entorno .env según la rama (main o dev)
+post-checkout: selecciona automáticamente el entorno .env según la rama (main o dev)
 
-- Ubicados en .githooks/ y activados con:
+Ubicados en .githooks/ y activados con:
 
 ```bash
 git config core.hooksPath .githooks
 ```
-## 📌 Avances realizados
+## 🧪 Entorno de Testing para CI/CD
+Archivo dedicado: config/settings_test.py
 
-✅ Modularización por dominio ✅ Autenticación JWT con registro y autologin ✅ Documentación Swagger decorada por tags ✅ Webhook de email al crear orden ✅ Pruebas automáticas por módulo ✅ Configuración desacoplada con .env ✅ Checklist técnico y documentación por app
+✅ SQLite en memoria
 
-## 🔔 Signal Flow: Orden → Notificación
+✅ Backend de correo local (locmem)
 
+✅ Hashing MD5 para contraseñas
+
+✅ Sin dependencia de .env
+
+✅ Compatible con GitHub Actions y multiplataforma
+
+```markdown
+![CI](https://github.com/NicolasAndresCL/TienditaMarian/actions/workflows/test.yml/badge.svg)
+```
+##🧠 Auditoría automática de eventos
+Registra automáticamente cada creación, actualización y eliminación en la tabla AuditLog.
+
+Compatible con ImageField, DateTimeField, ForeignKey
+
+Serialización robusta con JSONField
+
+Señales desacopladas (post_save, post_delete)
+
+Compatible con UUIDs y claves alfanuméricas
+
+Documentado y testeado con cobertura total
+
+##🧸 Product Loader: Enabled
+Carga masiva de productos con imágenes desde CSV.
+
+✅ Configuración correcta de MEDIA_ROOT y MEDIA_URL
+
+⚙️ Comando load_products con validación de rutas
+
+🧪 Fixture para testing desacoplado
+
+🧹 Limpieza de carpetas erróneas y duplicadas
+
+##🔔 Signal Flow: Orden → Notificación
 ```mermaid
 sequenceDiagram
     participant Usuario
@@ -153,41 +200,16 @@ sequenceDiagram
     Orden->>Signal: post_save
     Signal->>Notificacion: Crea notificación
 ```
-## 🧪 Entorno de Testing para CI/CD
-Este proyecto incluye un archivo dedicado config/settings_test.py para ejecutar pruebas automatizadas en entornos CI como GitHub Actions.
-
-✅ Base de datos SQLite en memoria para mayor velocidad
-
-✅ Backend de correo local (locmem) para evitar envíos reales
-
-✅ Hashing MD5 para acelerar validación de contraseñas
-
-✅ Sin dependencia de .env ni variables sensibles
-
-✅ Compatible con GitHub Actions y testing multiplataforma (Linux, Windows, Mac)
-
-Este entorno desacoplado permite ejecutar tests de forma reproducible, rápida y segura, asegurando trazabilidad y compatibilidad internacional.
-```
-![CI](https://github.com/NicolasAndresCL/TienditaMarian/actions/workflows/test.yml/badge.svg)
-```
-## 🧠 Auditoría automática de eventos
-
-Esta funcionalidad registra automáticamente cada creación, actualización y eliminación de modelos relevantes en la tabla `AuditLog`, usando señales desacopladas y serialización segura con DRF.
-
-- Compatible con campos complejos (`ImageField`, `DateTimeField`, `ForeignKey`)
-- Documentado y testeado con cobertura total
-- Preparado para entornos CI/CD y producción real
-
-
-## 🧑‍💻 Autor
+##🧑‍💻 Autor
 Nicolás Andrés Cano Leal Backend Developer especializado en APIs robustas con Django REST Framework, FastAPI y Flask.
 
->“Una tienda simple hecha con principios sólidos: escalabilidad, seguridad y código limpio.”
+>>“Una tienda simple hecha con principios sólidos: escalabilidad, seguridad y código limpio.”
 
-- 🌐 nicolasandres.pythonanywhere.com
+🌐 nicolasandres.pythonanywhere.com
 
-- 🐙 github.com/nicolasandrescl
+🐙 github.com/nicolasandrescl
 
-- 💼 linkedin.com/in/nicolas-andres-cano-leal
+💼 linkedin.com/in/nicolas-andres-cano-leal
 
-- 📧 nicolas.cano.leal@gmail.com
+📧 nicolas.cano.leal@gmail.com
+
