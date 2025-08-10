@@ -11,7 +11,7 @@ class AuditLog(models.Model):
     ]
 
     model_name = models.CharField(max_length=100)
-    object_id = models.PositiveIntegerField()
+    object_id = models.CharField(max_length=64)    
     action = models.CharField(max_length=10, choices=ACTIONS)
     timestamp = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
