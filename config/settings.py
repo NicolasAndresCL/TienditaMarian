@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.orden',
     'apps.auth_api',
     'apps.auditlog',
+    'apps.marian_loader',
 ]
 
 MIDDLEWARE = [

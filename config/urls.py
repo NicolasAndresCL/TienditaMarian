@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/reviews/', include('apps.reviews.urls')),
     path('api/analytics/', include('apps.analytics.urls')),
     path('api/auth/', include('apps.auth_api.urls')),
+    path('api/marian-loader/', include('apps.marian_loader.api.urls')),
 
     # 📘 Documentación Swagger/OpenAPI
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
