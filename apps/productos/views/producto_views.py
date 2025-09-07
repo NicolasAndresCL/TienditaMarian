@@ -30,12 +30,16 @@ class ProductoListView(mixins.ListModelMixin, GenericAPIView):
         return Producto.objects.all().order_by('-creado')
 
     def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(queryset, request)
-        serializer = self.get_serializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
 
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Si no hay paginación (por ejemplo, si la desactivas)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 # Detalle de producto (libre de autenticación)
 @extend_schema_view(
     get=extend_schema(

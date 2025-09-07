@@ -1,5 +1,4 @@
 from django.urls import path
-from apps.productos.views.home_view import home
 
 from apps.productos.views.producto_views import (
     ProductoListView,
@@ -11,14 +10,12 @@ from apps.productos.views.producto_views import (
 )
 
 urlpatterns = [
-    # 🏠 Home simple
-    path('', home, name='home'),
 
     # 📦 Productos CRUD modular
-    path('productos/', ProductoListView.as_view(), name='producto-list'),
-    path('productos/create/', ProductoCreateView.as_view(), name='producto-create'),
-    path('productos/<int:pk>/', ProductoDetailView.as_view(), name='producto-detail'),
-    path('productos/<int:pk>/update/', ProductoUpdateView.as_view(), name='producto-update'),
-    path('productos/<int:pk>/partial-update/', ProductoPartialUpdateView.as_view(), name='producto-partial-update'),
-    path('productos/<int:pk>/delete/', ProductoDeleteView.as_view(), name='producto-delete'),
+    path('', ProductoListView.as_view(), name='producto-list'),
+    path('create/', ProductoCreateView.as_view(), name='producto-create'),
+    path('<int:pk>/', ProductoDetailView.as_view(), name='producto-detail'),
+    path('<int:pk>/update/', ProductoUpdateView.as_view(), name='producto-update'),
+    path('<int:pk>/partial-update/', ProductoPartialUpdateView.as_view(), name='producto-partial-update'),
+    path('<int:pk>/delete/', ProductoDeleteView.as_view(), name='producto-delete'),
 ]
