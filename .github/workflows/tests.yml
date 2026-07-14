@@ -1,4 +1,4 @@
-name: Run Django Tests
+name: CI
 
 on:
   push:
@@ -10,31 +10,60 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ENV: test
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      DEBUG: false
-      ALLOWED_HOSTS: 127.0.0.1,localhost
-      DB_NAME: tiendita_test
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_HOST: 127.0.0.1
-      EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
-
+      # `config.settings.test` inyecta sus propios defaults (SQLite en memoria,
+      # correo locmem), así que la suite corre en un checkout limpio sin `.env`
+      # ni secretos. Antes se declaraban DB_USER/DB_PASSWORD que nadie leía.
+      DJANGO_SETTINGS_MODULE: config.settings.test
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: pip
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements/dev.txt
 
-      - name: Run tests
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Tests + cobertura
+        # --cov-fail-under convierte la cobertura en una condición de fallo.
+        # Antes se imprimía el reporte y se ignoraba el número.
+        run: pytest --cov --cov-report=term-missing --cov-fail-under=70
+
+  deploy-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
         run: |
-          coverage run manage.py test --settings=config.settings_test
-          coverage report
+          python -m pip install --upgrade pip
+          pip install -r requirements/prod.txt
+
+      - name: check --deploy
+        # Valida el hardening real de producción: SSL redirect, HSTS, cookies
+        # seguras y fortaleza de la SECRET_KEY. Sin esta verificación, un
+        # settings inseguro llegaba a producción sin que nadie se enterara.
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          ALLOWED_HOSTS: tienditademarian.com
+          DATABASE_URL: sqlite:///db.sqlite3
+          SECURE_HTTPS: 'True'
+        run: |
+          # Clave efímera solo para el check: no sirve tráfico ni se guarda.
+          # `check --deploy` rechaza claves cortas o autogeneradas por Django.
+          export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+          python manage.py check --deploy --fail-level WARNING
