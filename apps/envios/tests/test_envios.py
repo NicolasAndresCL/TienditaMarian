@@ -34,19 +34,39 @@ def test_el_dueno_ve_su_envio(auth_client, envio):
 
 
 @pytest.mark.django_db
-def test_el_dueno_actualiza_su_envio(auth_client, envio, usuario):
-    respuesta = auth_client.put(
+def test_el_dueno_corrige_la_direccion_de_su_envio(auth_client, envio):
+    respuesta = auth_client.patch(
         f'/api/envios/{envio.id}/',
-        {
-            'usuario': usuario.id,
-            'orden': envio.orden_id,
-            'direccion': 'Nueva Dirección 456',
-            'ciudad': 'Rancagua',
-            'codigo_postal': '7654321',
-            'estado': 'enviado',
-        },
+        {'direccion': 'Nueva Dirección 456', 'codigo_postal': '7654321'},
         format='json',
     )
 
     assert respuesta.status_code == 200
-    assert respuesta.data['estado'] == 'enviado'
+    envio.refresh_from_db()
+    assert envio.direccion == 'Nueva Dirección 456'
+
+
+@pytest.mark.django_db
+def test_el_cliente_no_declara_que_su_paquete_ya_salio(auth_client, envio):
+    """El estado lo gestiona la tienda: un cliente no marca su envío como enviado."""
+    respuesta = auth_client.patch(
+        f'/api/envios/{envio.id}/', {'estado': 'entregado'}, format='json'
+    )
+
+    assert respuesta.status_code == 200  # el campo se ignora, no rompe la petición
+    envio.refresh_from_db()
+    assert envio.estado == 'pendiente'
+
+
+@pytest.mark.django_db
+def test_la_tienda_si_avanza_el_estado_del_envio(admin_client_api, envio):
+    respuesta = admin_client_api.patch(
+        f'/api/envios/{envio.id}/',
+        {'estado': 'enviado', 'tracking_id': 'CL-99887766'},
+        format='json',
+    )
+
+    assert respuesta.status_code == 200
+    envio.refresh_from_db()
+    assert envio.estado == 'enviado'
+    assert envio.tracking_id == 'CL-99887766'

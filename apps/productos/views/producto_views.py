@@ -1,143 +1,117 @@
-from django.shortcuts import get_object_or_404
+"""Vistas del catálogo de productos.
+
+Antes, crear, editar y borrar productos solo exigía `IsAuthenticated`: cualquier
+cliente que se registrara en la tienda podía cambiar precios, alterar el stock o
+borrar el catálogo entero. El catálogo es de la dueña de la tienda, así que las
+escrituras pasan a `EsAdminOSoloLectura`; la lectura sigue siendo pública, que es
+lo que necesita la vitrina.
+
+Las seis clases originales repetían a mano el mismo `def get/post/put/...`
+delegando en los mixins. Ese cableado vive ahora en `core/api/base_views.py`
+(ADR-001: se mantiene GenericAPIView + mixins, sin router).
+"""
+
 from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
-from rest_framework import mixins, permissions
+from rest_framework import mixins
 from rest_framework.generics import GenericAPIView
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from apps.productos.models import Producto
 from apps.productos.serializers.producto_serializers import ProductoSerializer
+from core.api.permissions import EsAdminOSoloLectura
 
 
-# Lista de productos (libre de autenticación)
+class ProductoBaseView(GenericAPIView):
+    """Todo lo que comparten las vistas del catálogo."""
+
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
+    permission_classes = [EsAdminOSoloLectura]
+
+
 @extend_schema_view(
     get=extend_schema(
         operation_id="producto.list",
         tags=["Productos"],
         summary="Listar productos",
-        description="Devuelve una lista paginada de productos disponibles.",
-        responses={200: ProductoSerializer(many=True)}
+        description="Lista paginada del catálogo. Acceso público.",
+        responses={200: ProductoSerializer(many=True)},
     )
 )
-class ProductoListView(mixins.ListModelMixin, GenericAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = ProductoSerializer
-    pagination_class = PageNumberPagination
+class ProductoListView(mixins.ListModelMixin, ProductoBaseView):
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.list(request, *args, **kwargs)
 
-    def get_queryset(self):
-        return Producto.objects.all().order_by('-creado')
 
-    def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(queryset, request)
-        serializer = self.get_serializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
-# Detalle de producto (libre de autenticación)
 @extend_schema_view(
     get=extend_schema(
         operation_id="producto.detail",
         tags=["Productos"],
         summary="Detalle de producto",
-        description="Obtiene los detalles de un producto por ID.",
-        responses={
-            200: ProductoSerializer,
-            404: OpenApiResponse(description="Producto no encontrado.")
-        }
+        description="Obtiene un producto por su id. Acceso público.",
+        responses={200: ProductoSerializer, 404: OpenApiResponse(description="No encontrado.")},
     )
 )
-class ProductoDetailView(mixins.RetrieveModelMixin, GenericAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = ProductoSerializer
+class ProductoDetailView(mixins.RetrieveModelMixin, ProductoBaseView):
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.retrieve(request, *args, **kwargs)
 
-    def get_queryset(self):
-        return Producto.objects.all()
 
-    def get(self, request, pk):
-        producto = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer = self.get_serializer(producto)
-        return Response(serializer.data)
-
-# Crear producto (requiere autenticación)
 @extend_schema_view(
     post=extend_schema(
         operation_id="producto.create",
         tags=["Productos"],
         summary="Crear producto",
-        description="Crea un nuevo producto.",
-        responses={201: ProductoSerializer}
+        description="Solo la administración de la tienda.",
+        responses={201: ProductoSerializer},
     )
 )
-class ProductoCreateView(mixins.CreateModelMixin, GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ProductoSerializer
-
-    def get_queryset(self):
-        return Producto.objects.all()
-
-    def post(self, request, *args, **kwargs):
+class ProductoCreateView(mixins.CreateModelMixin, ProductoBaseView):
+    def post(self, request: Request, *args, **kwargs) -> Response:
         return self.create(request, *args, **kwargs)
 
-# Actualizar producto (requiere autenticación)
+
 @extend_schema_view(
     put=extend_schema(
         operation_id="producto.update",
         tags=["Productos"],
         summary="Actualizar producto",
-        description="Actualiza todos los campos de un producto.",
-        responses={200: ProductoSerializer}
+        description="Solo la administración de la tienda.",
+        responses={200: ProductoSerializer},
     )
 )
-class ProductoUpdateView(mixins.UpdateModelMixin, GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ProductoSerializer
-
-    def get_queryset(self):
-        return Producto.objects.all()
-
-    def put(self, request, pk, *args, **kwargs):
+class ProductoUpdateView(mixins.UpdateModelMixin, ProductoBaseView):
+    def put(self, request: Request, *args, **kwargs) -> Response:
         return self.update(request, *args, **kwargs)
 
-# Actualizar parcialmente producto (requiere autenticación)
+
 @extend_schema_view(
     patch=extend_schema(
         operation_id="producto.partial_update",
         tags=["Productos"],
-        summary="Actualizar parcialmente producto",
-        description="Actualiza campos específicos del producto.",
-        responses={200: ProductoSerializer}
+        summary="Actualizar producto parcialmente",
+        description="Solo la administración de la tienda.",
+        responses={200: ProductoSerializer},
     )
 )
-class ProductoPartialUpdateView(mixins.UpdateModelMixin, GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ProductoSerializer
-
-    def get_queryset(self):
-        return Producto.objects.all()
-
-    def patch(self, request, pk, *args, **kwargs):
+class ProductoPartialUpdateView(mixins.UpdateModelMixin, ProductoBaseView):
+    def patch(self, request: Request, *args, **kwargs) -> Response:
         return self.partial_update(request, *args, **kwargs)
 
-# Eliminar producto (requiere autenticación)
+
 @extend_schema_view(
     delete=extend_schema(
         operation_id="producto.delete",
         tags=["Productos"],
         summary="Eliminar producto",
-        description="Elimina un producto específico.",
+        description="Solo la administración de la tienda.",
         responses={
-            204: OpenApiResponse(description="Producto eliminado exitosamente."),
-            404: OpenApiResponse(description="Producto no encontrado.")
-        }
+            204: OpenApiResponse(description="Producto eliminado."),
+            404: OpenApiResponse(description="No encontrado."),
+        },
     )
 )
-class ProductoDeleteView(mixins.DestroyModelMixin, GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ProductoSerializer
-
-    def get_queryset(self):
-        return Producto.objects.all()
-
-    def delete(self, request, pk, *args, **kwargs):
+class ProductoDeleteView(mixins.DestroyModelMixin, ProductoBaseView):
+    def delete(self, request: Request, *args, **kwargs) -> Response:
         return self.destroy(request, *args, **kwargs)

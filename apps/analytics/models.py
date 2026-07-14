@@ -17,5 +17,11 @@ class AnalyticsEvent(models.Model):
     metadata = models.JSONField(default=dict, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-timestamp']
+        verbose_name_plural = 'Eventos analíticos'
+
     def __str__(self):
         return f'{self.tipo_evento} - {self.timestamp.strftime("%Y-%m-%d %H:%M:%S")}'

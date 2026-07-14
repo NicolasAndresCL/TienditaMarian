@@ -10,6 +10,12 @@ class Producto(models.Model):
     stock = models.IntegerField()
     creado = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-creado']
+        verbose_name_plural = 'Productos'
+
     def __str__(self):
         return self.nombre
     

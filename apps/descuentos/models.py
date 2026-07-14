@@ -17,5 +17,11 @@ class Descuento(models.Model):
     fecha_fin = models.DateField()
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='descuentos_personalizados')
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-fecha_inicio']
+        verbose_name_plural = 'Descuentos'
+
     def __str__(self):
         return f'{self.nombre} ({self.tipo} - {self.valor:.2f})'

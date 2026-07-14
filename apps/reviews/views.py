@@ -1,71 +1,57 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import generics, mixins
-from rest_framework.permissions import IsAuthenticated
+"""Vistas de reseñas.
 
-from .models import Review
-from .serializers import ReviewSerializer
+Las reseñas se leen en público (son parte de la vitrina), pero cada quien escribe
+las suyas: `EsAutorOSoloLectura` impide editar o borrar las ajenas, y
+`perform_create` fija el autor desde `request.user` en vez de leerlo del cuerpo,
+que era lo que permitía suplantar a otra persona.
+"""
+
+from drf_spectacular.utils import extend_schema, extend_schema_view
+
+from apps.reviews.models import Review
+from apps.reviews.serializers import ReviewSerializer
+from core.api.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from core.api.permissions import EsAutorOSoloLectura
 
 
 @extend_schema_view(
     get=extend_schema(
-        summary="Listar reviews",
-        description="Devuelve una lista de reseñas registradas.\n\nReturns a list of registered reviews.",
+        summary="Listar reseñas",
+        description="Reseñas de los productos. Lectura pública.",
         tags=["Reviews"],
-        operation_id="listarReviews"
+        operation_id="listarReviews",
     ),
     post=extend_schema(
-        summary="Crear review",
-        description="Registra una nueva reseña para un producto.\n\nCreates a new review for a product.",
+        summary="Publicar una reseña",
+        description="La reseña se publica siempre a nombre del usuario autenticado.",
         tags=["Reviews"],
-        operation_id="crearReview"
-    )
+        operation_id="crearReview",
+    ),
 )
-class ReviewListCreateView(mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           generics.GenericAPIView):
-    queryset = Review.objects.all()
+class ReviewListCreateView(BaseListCreateView):
+    queryset = Review.objects.select_related("producto", "usuario")
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [EsAutorOSoloLectura]
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request)
+    def perform_create(self, serializer) -> None:
+        serializer.save(usuario=self.request.user)
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request)
 
 @extend_schema_view(
-    get=extend_schema(
-        summary="Obtener review",
-        description="Devuelve los detalles de una reseña específica.\n\nReturns details of a specific review.",
-        tags=["Reviews"],
-        operation_id="obtenerReview"
-    ),
+    get=extend_schema(summary="Obtener reseña", tags=["Reviews"], operation_id="obtenerReview"),
     put=extend_schema(
-        summary="Actualizar review",
-        description="Actualiza los datos de una reseña existente.\n\nUpdates an existing review.",
+        summary="Actualizar mi reseña", tags=["Reviews"], operation_id="actualizarReview"
+    ),
+    patch=extend_schema(
+        summary="Actualizar mi reseña parcialmente",
         tags=["Reviews"],
-        operation_id="actualizarReview"
+        operation_id="actualizarReviewParcial",
     ),
     delete=extend_schema(
-        summary="Eliminar review",
-        description="Elimina una reseña.\n\nDeletes a review.",
-        tags=["Reviews"],
-        operation_id="eliminarReview"
-    )
+        summary="Eliminar mi reseña", tags=["Reviews"], operation_id="eliminarReview"
+    ),
 )
-class ReviewDetailView(mixins.RetrieveModelMixin,
-                       mixins.UpdateModelMixin,
-                       mixins.DestroyModelMixin,
-                       generics.GenericAPIView):
-    queryset = Review.objects.all()
+class ReviewDetailView(BaseRetrieveUpdateDestroyView):
+    queryset = Review.objects.select_related("producto", "usuario")
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request)
-
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request)
+    permission_classes = [EsAutorOSoloLectura]

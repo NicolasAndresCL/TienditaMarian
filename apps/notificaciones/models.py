@@ -16,5 +16,11 @@ class Notificacion(models.Model):
     enviada = models.BooleanField(default=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-fecha_creacion']
+        verbose_name_plural = 'Notificaciones'
+
     def __str__(self):
         return f'Notificación {self.id} - {self.tipo} - {"Enviada" if self.enviada else "Pendiente"}'

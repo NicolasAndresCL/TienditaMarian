@@ -24,5 +24,11 @@ class Envio(models.Model):
     # (NULL y ''), y las consultas tendrían que contemplar las dos.
     tracking_id = models.CharField(max_length=100, blank=True, default='')
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-fecha_envio']
+        verbose_name_plural = 'Envíos'
+
     def __str__(self):
         return f'Envio {self.id} - {self.estado}'

@@ -22,5 +22,11 @@ class Pago(models.Model):
     # Sin `null=True`: evita tener NULL y '' como dos representaciones de "vacío".
     transaccion_id = models.CharField(max_length=100, blank=True, default='')
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-fecha_pago']
+        verbose_name_plural = 'Pagos'
+
     def __str__(self):
         return f'Pago {self.id} - {self.metodo} - {self.estado}'

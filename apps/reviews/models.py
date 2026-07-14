@@ -12,5 +12,11 @@ class Review(models.Model):
     calificacion = models.PositiveSmallIntegerField()  # 1 a 5
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-fecha_creacion']
+        verbose_name_plural = 'Reseñas'
+
     def __str__(self):
         return f'Review {self.id} - {self.calificacion}⭐'

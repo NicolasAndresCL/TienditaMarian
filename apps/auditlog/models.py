@@ -17,5 +17,11 @@ class AuditLog(models.Model):
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     changes = models.JSONField(null=True, blank=True)
 
+    class Meta:
+        # Sin un orden explícito la paginación es inestable: la misma
+        # página puede devolver filas distintas entre dos peticiones.
+        ordering = ['-timestamp']
+        verbose_name_plural = 'Entradas de auditoría'
+
     def __str__(self):
         return f"{self.model_name} ({self.object_id}) - {self.action}"

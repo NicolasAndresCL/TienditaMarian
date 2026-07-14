@@ -1,71 +1,58 @@
+"""Vistas de descuentos.
+
+Los cupones los emite la tienda. Antes bastaba `IsAuthenticated`, así que
+cualquier cliente podía crearse un descuento del 99% y aplicárselo. Las
+escrituras pasan a ser exclusivas del staff; la lectura queda para usuarios
+autenticados, que es lo que el frontend necesita para mostrar las promociones
+vigentes.
+"""
+
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import generics, mixins
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Descuento
-from .serializers import DescuentoSerializer
+from apps.descuentos.models import Descuento
+from apps.descuentos.serializers import DescuentoSerializer
+from core.api.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from core.api.permissions import EsAdminOSoloLectura
 
 
 @extend_schema_view(
     get=extend_schema(
         summary="Listar descuentos",
-        description="Devuelve una lista de descuentos activos o registrados.\n\nReturns a list of active or registered discounts.",
+        description="Descuentos registrados.",
         tags=["Descuentos"],
-        operation_id="listarDescuentos"
+        operation_id="listarDescuentos",
     ),
     post=extend_schema(
         summary="Crear descuento",
-        description="Registra un nuevo descuento aplicable.\n\nCreates a new applicable discount.",
+        description="Solo la administración de la tienda emite cupones.",
         tags=["Descuentos"],
-        operation_id="crearDescuento"
-    )
+        operation_id="crearDescuento",
+    ),
 )
-class DescuentoListCreateView(mixins.ListModelMixin,
-                              mixins.CreateModelMixin,
-                              generics.GenericAPIView):
+class DescuentoListCreateView(BaseListCreateView):
     queryset = Descuento.objects.all()
     serializer_class = DescuentoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, EsAdminOSoloLectura]
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request)
 
 @extend_schema_view(
     get=extend_schema(
-        summary="Obtener descuento",
-        description="Devuelve los detalles de un descuento específico.\n\nReturns details of a specific discount.",
-        tags=["Descuentos"],
-        operation_id="obtenerDescuento"
+        summary="Obtener descuento", tags=["Descuentos"], operation_id="obtenerDescuento"
     ),
     put=extend_schema(
-        summary="Actualizar descuento",
-        description="Actualiza los datos de un descuento existente.\n\nUpdates an existing discount.",
+        summary="Actualizar descuento", tags=["Descuentos"], operation_id="actualizarDescuento"
+    ),
+    patch=extend_schema(
+        summary="Actualizar descuento parcialmente",
         tags=["Descuentos"],
-        operation_id="actualizarDescuento"
+        operation_id="actualizarDescuentoParcial",
     ),
     delete=extend_schema(
-        summary="Eliminar descuento",
-        description="Elimina un descuento.\n\nDeletes a discount.",
-        tags=["Descuentos"],
-        operation_id="eliminarDescuento"
-    )
+        summary="Eliminar descuento", tags=["Descuentos"], operation_id="eliminarDescuento"
+    ),
 )
-class DescuentoDetailView(mixins.RetrieveModelMixin,
-                          mixins.UpdateModelMixin,
-                          mixins.DestroyModelMixin,
-                          generics.GenericAPIView):
+class DescuentoDetailView(BaseRetrieveUpdateDestroyView):
     queryset = Descuento.objects.all()
     serializer_class = DescuentoSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request)
-
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request)
+    permission_classes = [IsAuthenticated, EsAdminOSoloLectura]
