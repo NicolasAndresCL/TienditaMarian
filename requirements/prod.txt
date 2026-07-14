@@ -1,0 +1,5 @@
+# Entorno de producción: servidor WSGI + estáticos.
+-r base.txt
+
+gunicorn==23.0.0
+whitenoise==6.9.0

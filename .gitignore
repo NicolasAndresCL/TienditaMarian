@@ -7,6 +7,12 @@ __pycache__/
 # archivos de configuración sensibles
 .env
 .env*
+# ...pero la plantilla sin secretos sí se versiona
+!.env.example
+
+# base de datos local
+*.sqlite3
+db.sqlite3
 
 # archivos de migración (opcional)
 */migrations/__pycache__/
@@ -20,6 +26,9 @@ __pycache__/
 # archivos de caché
 *.cache
 /staticfiles/
+.pytest_cache/
+.ruff_cache/
 
 .coverage
+coverage.xml
 htmlcov/

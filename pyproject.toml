@@ -1,0 +1,49 @@
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "tests.py"]
+addopts = "--strict-markers -ra"
+testpaths = ["apps", "core"]
+
+[tool.coverage.run]
+source = ["apps", "core", "config"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/tests.py",
+    "manage.py",
+    "config/wsgi.py",
+    "config/asgi.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["*/migrations/*", "env", "venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "DJ",  # flake8-django
+    "C4",  # comprehensions
+    "T20", # flake8-print — prohíbe print(); el proyecto usa logging
+]
+ignore = [
+    "E501",  # el largo de línea lo maneja el formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Los settings por entorno se construyen con `from .base import *`.
+"config/settings/*.py" = ["F403", "F405", "E402"]

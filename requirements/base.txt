@@ -1,0 +1,17 @@
+# Dependencias necesarias para que la aplicación corra en cualquier entorno.
+# Se declaran solo las directas: las transitivas las resuelve pip.
+#
+# Fuera respecto de la versión anterior:
+#   - mysqlclient   → se migró a PostgreSQL (psycopg v3)
+#   - python-decouple → había DOS librerías de configuración; queda django-environ
+
+Django==5.2.4
+djangorestframework==3.16.0
+djangorestframework-simplejwt==5.5.0
+django-cors-headers==4.7.0
+django-environ==0.12.0
+drf-spectacular==0.28.0
+drf-spectacular-sidecar
+dj-database-url==3.1.2
+psycopg[binary]==3.3.4
+pillow==11.3.0
