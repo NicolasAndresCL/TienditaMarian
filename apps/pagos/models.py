@@ -8,16 +8,26 @@ User = get_user_model()
 
 class Pago(models.Model):
     METODO_CHOICES = [
+        # `manual` es la transferencia que la tienda confirma a mano: es el único
+        # medio realmente implementado hoy (ver apps/pagos/services.py). Los demás
+        # quedan declarados a la espera de su integración.
+        ('manual', 'Transferencia manual'),
         ('stripe', 'Stripe'),
         ('paypal', 'PayPal'),
         ('webpay', 'Webpay'),
+    ]
+
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('pagado', 'Pagado'),
+        ('fallido', 'Fallido'),
     ]
 
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pagos')
     orden = models.ForeignKey(Orden, on_delete=models.CASCADE, related_name='pagos')
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     metodo = models.CharField(max_length=20, choices=METODO_CHOICES)
-    estado = models.CharField(max_length=20, default='pendiente')  # pagado, fallido, pendiente
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     fecha_pago = models.DateTimeField(auto_now_add=True)
     # Sin `null=True`: evita tener NULL y '' como dos representaciones de "vacío".
     transaccion_id = models.CharField(max_length=100, blank=True, default='')

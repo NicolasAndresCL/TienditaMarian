@@ -1,17 +1,20 @@
-from django.shortcuts import get_object_or_404
+"""Vistas de órdenes: el historial de compras de la usuaria."""
+
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
     extend_schema,
     extend_schema_view,
 )
+from rest_framework import mixins
 from rest_framework.generics import GenericAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.orden.models import Orden
+from apps.orden.selectors import filtrar_ordenes, ordenes_de
 from apps.orden.serializers import OrdenSerializer
+from core.api.permissions import EsDuenoOAdmin
 
 
 @extend_schema_view(
@@ -19,37 +22,47 @@ from apps.orden.serializers import OrdenSerializer
         operation_id="orden.list",
         tags=["Órdenes"],
         summary="Historial de órdenes",
-        description="Retorna las órdenes del usuario autenticado. Filtrable por fecha y estado de pago.",
+        description="Órdenes del usuario autenticado. Filtrable por fecha y estado de pago.",
         parameters=[
-            OpenApiParameter(name="fecha_inicio", type=str, location=OpenApiParameter.QUERY, description="Filtrar desde esta fecha (YYYY-MM-DD)"),
-            OpenApiParameter(name="fecha_fin", type=str, location=OpenApiParameter.QUERY, description="Filtrar hasta esta fecha (YYYY-MM-DD)"),
-            OpenApiParameter(name="pagado", type=str, location=OpenApiParameter.QUERY, description="Filtrar por pago: true / false")
+            OpenApiParameter(
+                name="fecha_inicio",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filtrar desde esta fecha (YYYY-MM-DD), inclusive.",
+            ),
+            OpenApiParameter(
+                name="fecha_fin",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filtrar hasta esta fecha (YYYY-MM-DD), inclusive.",
+            ),
+            OpenApiParameter(
+                name="pagado",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="true / false. Si se omite, no filtra.",
+            ),
         ],
-        responses={200: OrdenSerializer(many=True)}
+        responses={200: OrdenSerializer(many=True)},
     )
 )
-class OrdenListView(GenericAPIView):
+class OrdenListView(mixins.ListModelMixin, GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = OrdenSerializer
-    pagination_class = PageNumberPagination
 
-    def get(self, request):
-        ordenes = Orden.objects.filter(usuario=request.user).order_by('-creado')
-        fecha_inicio = request.query_params.get('fecha_inicio')
-        fecha_fin = request.query_params.get('fecha_fin')
-        pagado = request.query_params.get('pagado')
+    def get_queryset(self):
+        # Los filtros y sus casos límite viven en el selector; la vista solo pasa
+        # los parámetros. La paginación la aplica el ListModelMixin con la clase
+        # global, en vez de instanciar un paginador a mano en cada petición.
+        return filtrar_ordenes(
+            self.request.user,
+            fecha_inicio=self.request.query_params.get("fecha_inicio"),
+            fecha_fin=self.request.query_params.get("fecha_fin"),
+            pagado=self.request.query_params.get("pagado"),
+        )
 
-        if fecha_inicio:
-            ordenes = ordenes.filter(creado__gte=fecha_inicio)
-        if fecha_fin:
-            ordenes = ordenes.filter(creado__lte=fecha_fin)
-        if pagado is not None:
-            ordenes = ordenes.filter(pagado=pagado.lower() in ['true', '1'])
-
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(ordenes, request)
-        serializer = self.get_serializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.list(request, *args, **kwargs)
 
 
 @extend_schema_view(
@@ -57,18 +70,15 @@ class OrdenListView(GenericAPIView):
         operation_id="orden.detail",
         tags=["Órdenes"],
         summary="Detalle de una orden",
-        description="Devuelve la información completa de una orden específica del usuario.",
-        responses={
-            200: OrdenSerializer,
-            404: OpenApiResponse(description="Orden no encontrada.")
-        }
+        responses={200: OrdenSerializer, 404: OpenApiResponse(description="No encontrada.")},
     )
 )
-class OrdenDetailView(GenericAPIView):
-    permission_classes = [IsAuthenticated]
+class OrdenDetailView(mixins.RetrieveModelMixin, GenericAPIView):
+    permission_classes = [IsAuthenticated, EsDuenoOAdmin]
     serializer_class = OrdenSerializer
 
-    def get(self, request, pk):
-        orden = get_object_or_404(Orden, pk=pk, usuario=request.user)
-        serializer = self.get_serializer(orden)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return ordenes_de(self.request.user)
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.retrieve(request, *args, **kwargs)
