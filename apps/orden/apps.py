@@ -7,7 +7,9 @@ class OrdenConfig(AppConfig):
     verbose_name = 'Órdenes'
 
     def ready(self):
-        # El import es lo que registra los receivers decorados con @receiver.
-        # Parece "sin usar", pero no lo es: el `noqa` impide que un linter lo
-        # elimine y deje las señales silenciosamente desconectadas.
-        import apps.orden.signals  # noqa: F401
+        # Los efectos de una orden (correo, notificación, envío) se registran
+        # como suscriptores explícitos del despachador, en vez de esconderse en
+        # señales post_save repartidas por varias apps.
+        from apps.orden.subscribers import registrar_suscriptores
+
+        registrar_suscriptores()

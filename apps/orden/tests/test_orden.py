@@ -7,22 +7,24 @@ from apps.orden.models import Orden
 
 
 @pytest.mark.django_db
-def test_crear_orden_envia_dos_correos_bug_conocido(usuario):
-    """CARACTERIZACIÓN — fija el comportamiento actual, que está MAL.
+def test_crear_una_orden_no_manda_correos_por_si_sola(usuario):
+    """Antes `Orden.save()` llamaba a `send_mail()`. Ya no: un modelo no notifica.
 
-    Al crear una orden salen **dos** correos idénticos, porque el envío está
-    duplicado en dos lugares: `Orden.save()` manda uno y la señal `post_save`
-    de `apps/orden/signals.py` manda otro. El cliente recibe el mensaje repetido.
+    Este test cierra el ciclo del de caracterización que congelaba el bug del
+    doble correo. Había dos envíos —uno desde `save()` y otro desde la señal
+    post_save— y la clienta recibía el mensaje repetido. Peor: el correo del
+    modelo salía DENTRO de la transacción del checkout, así que una compra que
+    después se revertía igual dejaba enviado un "gracias por tu compra".
 
-    El test se deja pasando a propósito (skill §3: nunca un big-bang a ciegas):
-    congela la conducta de hoy para que, cuando la Fase 3 saque el `send_mail`
-    del modelo, el cambio sea visible y deliberado en el diff en vez de una
-    regresión silenciosa. En esa fase este test pasa a exigir **un** correo.
+    Ahora notificar es un efecto del evento ORDEN_CREADA, que el checkout emite
+    tras confirmar la transacción. Que salga exactamente un correo se verifica en
+    `apps/carrito/tests/test_checkout.py::test_comprar_manda_un_solo_correo`.
     """
+    mail.outbox.clear()
+
     Orden.objects.create(usuario=usuario, total=1000)
 
-    assert len(mail.outbox) == 2, "si esto cambió, actualiza el test junto con el arreglo"
-    assert "Gracias por tu compra" in mail.outbox[0].subject
+    assert len(mail.outbox) == 0
 
 
 @pytest.mark.django_db

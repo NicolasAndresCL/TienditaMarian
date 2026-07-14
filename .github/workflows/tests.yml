@@ -37,6 +37,49 @@ jobs:
         # Antes se imprimía el reporte y se ignoraba el número.
         run: pytest --cov --cov-report=term-missing --cov-fail-under=70
 
+  test-postgres:
+    # SQLite ignora select_for_update, así que el test de concurrencia del
+    # checkout se salta en el job rápido: pasaría sin probar nada. Aquí corre
+    # contra el motor real de producción, donde el bloqueo existe de verdad.
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tiendita
+          POSTGRES_PASSWORD: tiendita
+          POSTGRES_DB: tiendita_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DATABASE_URL: postgres://tiendita:tiendita@localhost:5432/tiendita_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/dev.txt
+
+      - name: Tests contra PostgreSQL
+        # -rs muestra los skips: si el test de concurrencia apareciera saltado
+        # aquí, sería señal de que no está corriendo contra Postgres.
+        run: pytest -rs
+
   deploy-check:
     runs-on: ubuntu-latest
 
