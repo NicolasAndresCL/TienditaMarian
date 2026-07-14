@@ -1,6 +1,7 @@
 
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
+
 from apps.orden.models import Orden
 
 User = get_user_model()
@@ -18,7 +19,8 @@ class Pago(models.Model):
     metodo = models.CharField(max_length=20, choices=METODO_CHOICES)
     estado = models.CharField(max_length=20, default='pendiente')  # pagado, fallido, pendiente
     fecha_pago = models.DateTimeField(auto_now_add=True)
-    transaccion_id = models.CharField(max_length=100, blank=True, null=True)
+    # Sin `null=True`: evita tener NULL y '' como dos representaciones de "vacío".
+    transaccion_id = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
         return f'Pago {self.id} - {self.metodo} - {self.estado}'

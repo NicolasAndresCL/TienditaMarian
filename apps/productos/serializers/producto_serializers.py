@@ -1,6 +1,8 @@
-from rest_framework import serializers
-from apps.productos.models import Producto
 from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
+
+from apps.productos.models import Producto
+
 
 class ProductoSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()

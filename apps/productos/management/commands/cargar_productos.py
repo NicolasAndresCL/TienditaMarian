@@ -1,8 +1,12 @@
-import csv, os
-from django.core.management.base import BaseCommand
-from django.core.files import File
+import csv
+import os
+
 from django.conf import settings
+from django.core.files import File
+from django.core.management.base import BaseCommand
+
 from apps.productos.models import Producto
+
 
 class Command(BaseCommand):
     help = 'Carga productos desde CSV con imágenes asociadas'

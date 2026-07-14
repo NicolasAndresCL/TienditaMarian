@@ -1,7 +1,10 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from apps.orden.models import Orden
+
 from .models import Notificacion
+
 
 @receiver(post_save, sender=Orden)
 def crear_notificacion_orden(sender, instance, created, **kwargs):

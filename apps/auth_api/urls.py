@@ -1,5 +1,6 @@
 from django.urls import path
-from apps.auth_api.views import CustomTokenObtainPairView, RegisterAPIView, CustomTokenRefreshView
+
+from apps.auth_api.views import CustomTokenObtainPairView, CustomTokenRefreshView, RegisterAPIView
 
 urlpatterns = [
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

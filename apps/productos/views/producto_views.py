@@ -1,15 +1,13 @@
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import mixins, permissions
 from rest_framework.generics import GenericAPIView
-from rest_framework import mixins, permissions, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 
 from apps.productos.models import Producto
 from apps.productos.serializers.producto_serializers import ProductoSerializer
-from drf_spectacular.utils import (
-    extend_schema_view, extend_schema,
-    OpenApiResponse
-)
+
 
 # Lista de productos (libre de autenticación)
 @extend_schema_view(

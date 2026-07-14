@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import DescuentoListCreateView, DescuentoDetailView
+
+from .views import DescuentoDetailView, DescuentoListCreateView
 
 urlpatterns = [
     path('', DescuentoListCreateView.as_view(), name='descuentos-list-create'),

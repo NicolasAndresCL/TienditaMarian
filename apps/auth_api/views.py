@@ -1,15 +1,13 @@
 from django.contrib.auth.models import User
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import mixins, permissions, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.auth_api.serializers import CustomTokenObtainPairSerializer, RegisterSerializer
-from drf_spectacular.utils import (
-    extend_schema_view, extend_schema,
-    OpenApiExample, OpenApiResponse
-)
+
 
 @extend_schema_view(
     post=extend_schema(

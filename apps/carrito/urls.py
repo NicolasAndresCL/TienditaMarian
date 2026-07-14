@@ -1,11 +1,12 @@
 from django.urls import path
+
 from apps.carrito.views import (
-    CarritoDetailView,
     AddItemCarritoView,
+    CarritoDetailView,
+    CheckoutView,
+    ClearCarritoView,
     RemoveItemCarritoView,
     UpdateCantidadCarritoView,
-    ClearCarritoView,
-    CheckoutView,
 )
 
 urlpatterns = [

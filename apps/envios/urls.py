@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import EnvioListCreateView, EnvioDetailView
+
+from .views import EnvioDetailView, EnvioListCreateView
 
 urlpatterns = [
     path('', EnvioListCreateView.as_view(), name='envios-list-create'),

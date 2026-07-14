@@ -1,5 +1,6 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
+
 from apps.orden.models import Orden
 
 User = get_user_model()
@@ -19,7 +20,9 @@ class Envio(models.Model):
     codigo_postal = models.CharField(max_length=20)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     fecha_envio = models.DateTimeField(auto_now_add=True)
-    tracking_id = models.CharField(max_length=100, blank=True, null=True)
+    # Sin `null=True`: en un campo de texto habría dos formas de decir "vacío"
+    # (NULL y ''), y las consultas tendrían que contemplar las dos.
+    tracking_id = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
         return f'Envio {self.id} - {self.estado}'

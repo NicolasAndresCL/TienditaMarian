@@ -1,8 +1,10 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, mixins
+from rest_framework.permissions import IsAuthenticated
+
 from .models import Notificacion
 from .serializers import NotificacionSerializer
-from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema_view, extend_schema
+
 
 @extend_schema_view(
     get=extend_schema(

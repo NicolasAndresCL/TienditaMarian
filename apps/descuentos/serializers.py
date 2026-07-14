@@ -1,5 +1,7 @@
 from rest_framework import serializers
+
 from .models import Descuento
+
 
 class DescuentoSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,18 +1,17 @@
-from rest_framework import status, mixins
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import GenericAPIView
-from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import status
+from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.carrito.models import Carrito, ItemCarrito
-from apps.productos.models import Producto
-from apps.orden.models import Orden, ItemOrden
-
 from apps.carrito.serializers import CarritoSerializer, ItemCarritoSerializer
+from apps.orden.models import ItemOrden, Orden
 from apps.orden.serializers import OrdenSerializer
+from apps.productos.models import Producto
 
-from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiExample, OpenApiResponse
 
 # 📦 Utils
 def get_or_create_carrito(usuario):

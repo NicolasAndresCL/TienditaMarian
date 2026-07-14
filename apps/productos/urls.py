@@ -1,13 +1,13 @@
 from django.urls import path
-from apps.productos.views.home_view import home
 
+from apps.productos.views.home_view import home
 from apps.productos.views.producto_views import (
-    ProductoListView,
     ProductoCreateView,
-    ProductoDetailView,
-    ProductoUpdateView,
-    ProductoPartialUpdateView,
     ProductoDeleteView,
+    ProductoDetailView,
+    ProductoListView,
+    ProductoPartialUpdateView,
+    ProductoUpdateView,
 )
 
 urlpatterns = [
