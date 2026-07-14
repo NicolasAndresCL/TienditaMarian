@@ -1,0 +1,29 @@
+# Nada de esto debe entrar en la imagen: infla el contexto de build y, en el caso
+# del .env, metería secretos dentro de una capa de la imagen.
+.env
+.env.*
+!.env.example
+
+env/
+venv/
+__pycache__/
+*.py[cod]
+
+.git/
+.github/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+*.sqlite3
+db.sqlite3
+
+staticfiles/
+media/
+
+.vscode/
+.idea/
+.DS_Store
+*.md

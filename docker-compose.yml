@@ -1,0 +1,66 @@
+# Entorno completo: PostgreSQL + backend + MailHog.
+#
+#   docker compose up --build
+#   → API      http://localhost:8000
+#   → Correos  http://localhost:8025  (MailHog: los mails de la tienda caen ahí)
+#   → Salud    http://localhost:8000/healthz/
+#
+# Levantar esto es además la única forma de correr el test de concurrencia del
+# checkout: SQLite ignora select_for_update, así que ese test solo prueba algo
+# contra PostgreSQL.
+#
+#   docker compose run --rm backend pytest -rs
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tiendita}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tiendita}
+      POSTGRES_DB: ${POSTGRES_DB:-tiendita_marian}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      # El backend espera a que la base esté LISTA, no solo levantada: sin esto,
+      # el `migrate` del arranque falla por conexión rechazada.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tiendita}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # interfaz web
+
+  backend:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      SECRET_KEY: ${SECRET_KEY:?define SECRET_KEY en tu .env}
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgres://${POSTGRES_USER:-tiendita}:${POSTGRES_PASSWORD:-tiendita}@db:5432/${POSTGRES_DB:-tiendita_marian}
+      # El contenedor local no tiene TLS: sin esto, SECURE_SSL_REDIRECT haría un
+      # bucle infinito de redirecciones a https.
+      SECURE_HTTPS: "False"
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      EMAIL_HOST: mailhog
+      EMAIL_PORT: "1025"
+    ports:
+      - "8000:8000"
+    volumes:
+      - media_data:/app/media
+
+volumes:
+  postgres_data:
+  media_data:
