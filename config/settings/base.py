@@ -129,6 +129,10 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    # Único punto donde un error se convierte en respuesta HTTP: traduce las
+    # excepciones de dominio (core.exceptions) y unifica el formato de todos los
+    # errores de la API.
+    "EXCEPTION_HANDLER": "core.api.exception_handler.custom_exception_handler",
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
