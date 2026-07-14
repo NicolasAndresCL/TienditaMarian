@@ -1,7 +1,9 @@
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from .models import Descuento
 from datetime import date
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from apps.descuentos.models import Descuento
 
 User = get_user_model()
 

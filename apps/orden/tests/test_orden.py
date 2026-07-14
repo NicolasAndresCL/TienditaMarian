@@ -1,25 +1,34 @@
-from django.test import TestCase
-from apps.carrito.models import Carrito, ItemCarrito
-from django.contrib.auth import get_user_model
-from apps.productos.models import Producto
+"""Tests de órdenes."""
+
+import pytest
+from django.core import mail
+
 from apps.orden.models import Orden
 
-User = get_user_model()
 
-class CarritoOrdenTestCase(TestCase):
-    def setUp(self):
-        self.usuario = User.objects.create_user(
-            username="testuser",
-            password="12345",
-            email="testuser@example.com"
-        )
-        self.carrito = Carrito.objects.create(usuario=self.usuario)
-        self.producto = Producto.objects.create(nombre="Test Producto", precio=1000, stock=10)
-    
-    def test_email_enviado_al_crear_orden(self):
-        from django.core import mail
-        ItemCarrito.objects.create(carrito=self.carrito, producto=self.producto, cantidad=1)
-        orden = Orden.objects.create(usuario=self.usuario, total=1000)
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertIn('Gracias por tu compra', mail.outbox[0].subject)
-        
+@pytest.mark.django_db
+def test_crear_orden_envia_dos_correos_bug_conocido(usuario):
+    """CARACTERIZACIÓN — fija el comportamiento actual, que está MAL.
+
+    Al crear una orden salen **dos** correos idénticos, porque el envío está
+    duplicado en dos lugares: `Orden.save()` manda uno y la señal `post_save`
+    de `apps/orden/signals.py` manda otro. El cliente recibe el mensaje repetido.
+
+    El test se deja pasando a propósito (skill §3: nunca un big-bang a ciegas):
+    congela la conducta de hoy para que, cuando la Fase 3 saque el `send_mail`
+    del modelo, el cambio sea visible y deliberado en el diff en vez de una
+    regresión silenciosa. En esa fase este test pasa a exigir **un** correo.
+    """
+    Orden.objects.create(usuario=usuario, total=1000)
+
+    assert len(mail.outbox) == 2, "si esto cambió, actualiza el test junto con el arreglo"
+    assert "Gracias por tu compra" in mail.outbox[0].subject
+
+
+@pytest.mark.django_db
+def test_orden_pertenece_al_usuario(usuario):
+    orden = Orden.objects.create(usuario=usuario, total=1000)
+
+    assert orden.usuario == usuario
+    assert orden.estado == "pendiente"
+    assert orden.pagado is False

@@ -1,6 +1,7 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from .models import AnalyticsEvent
+from django.test import TestCase
+
+from apps.analytics.models import AnalyticsEvent
 
 User = get_user_model()
 

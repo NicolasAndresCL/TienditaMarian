@@ -1,28 +1,29 @@
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from .models import Notificacion
+"""Tests de notificaciones."""
 
-User = get_user_model()
+import pytest
 
-class NotificacionModelTest(TestCase):
-    def test_crear_notificacion(self):
-        user = User.objects.create_user(username='testuser', password='12345')
-        noti = Notificacion.objects.create(
-            usuario=user,
-            tipo='email',
-            asunto='Confirmación de orden',
-            mensaje='Tu orden ha sido confirmada.',
-            enviada=False
-        )
-        self.assertFalse(noti.enviada)
-        self.assertEqual(str(noti), f'Notificación {noti.id} - email - Pendiente')
-
+from apps.notificaciones.models import Notificacion
 from apps.orden.models import Orden
 
-class NotificacionSignalTest(TestCase):
-    def test_signal_crea_notificacion(self):
-        user = User.objects.create_user(username='signaluser', password='12345')
-        orden = Orden.objects.create(usuario=user, estado='pendiente', total=19000)
-        notificaciones = Notificacion.objects.filter(usuario=user)
-        self.assertEqual(notificaciones.count(), 1)
-        self.assertIn('Nueva orden creada', notificaciones.first().asunto)
+
+@pytest.mark.django_db
+def test_crear_notificacion(usuario):
+    noti = Notificacion.objects.create(
+        usuario=usuario,
+        tipo='email',
+        asunto='Confirmación de orden',
+        mensaje='Tu orden ha sido confirmada.',
+        enviada=False,
+    )
+
+    assert noti.enviada is False
+    assert str(noti) == f'Notificación {noti.id} - email - Pendiente'
+
+
+@pytest.mark.django_db
+def test_crear_una_orden_genera_su_notificacion(usuario):
+    Orden.objects.create(usuario=usuario, estado='pendiente', total=19000)
+
+    notificaciones = Notificacion.objects.filter(usuario=usuario)
+    assert notificaciones.count() == 1
+    assert 'Nueva orden creada' in notificaciones.first().asunto

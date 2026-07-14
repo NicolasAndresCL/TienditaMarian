@@ -1,6 +1,9 @@
-from django.test import TestCase
-from apps.productos.models import Producto
 from decimal import Decimal
+
+from django.test import TestCase
+
+from apps.productos.models import Producto
+
 
 class ProductoModelTest(TestCase):
     def setUp(self):
