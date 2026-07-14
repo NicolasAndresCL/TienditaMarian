@@ -1,8 +1,12 @@
 from django.apps import AppConfig
 
+
 class AuditlogConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.auditlog'
+    verbose_name = 'Auditoría'
 
     def ready(self):
-        import apps.auditlog.signals
+        from apps.auditlog.signals import conectar_signals
+
+        conectar_signals()
