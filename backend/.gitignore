@@ -1,0 +1,38 @@
+# entorno virtual
+env/
+venv/
+__pycache__/
+*.py[cod]
+
+# archivos de configuración sensibles
+.env
+.env*
+# ...pero la plantilla sin secretos sí se versiona
+!.env.example
+
+# base de datos local
+*.sqlite3
+db.sqlite3
+
+# archivos de migración (opcional)
+*/migrations/__pycache__/
+*.log
+
+# archivos de sistema
+.DS_Store
+.idea/
+.vscode/
+
+# archivos de caché
+*.cache
+/staticfiles/
+.pytest_cache/
+.ruff_cache/
+
+.coverage
+coverage.xml
+htmlcov/
+
+# bitácora personal de portafolio (no versionada)
+memory.md
+CLAUDE.md

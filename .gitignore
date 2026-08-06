@@ -1,38 +1,60 @@
-# entorno virtual
+# ============================================================
+# Monorepo TienditaMarian — .gitignore raíz (backend Python + frontend Node)
+# ============================================================
+
+# --- Secretos y entornos (NUNCA se versionan) ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# --- Python / Django (backend/) ---
 env/
 venv/
 __pycache__/
 *.py[cod]
-
-# archivos de configuración sensibles
-.env
-.env*
-# ...pero la plantilla sin secretos sí se versiona
-!.env.example
-
-# base de datos local
 *.sqlite3
 db.sqlite3
-
-# archivos de migración (opcional)
 */migrations/__pycache__/
-*.log
-
-# archivos de sistema
-.DS_Store
-.idea/
-.vscode/
-
-# archivos de caché
-*.cache
-/staticfiles/
 .pytest_cache/
 .ruff_cache/
-
 .coverage
 coverage.xml
 htmlcov/
+backend/staticfiles/
+# Media subida en runtime NO se versiona...
+backend/media/*
+!backend/media/productos/
+backend/media/productos/*
+# ...salvo el catálogo de demostración, para que un clon muestre productos con imagen
+!backend/media/productos/images/
 
-# bitácora personal de portafolio (no versionada)
+# --- Node / Vite (frontend/) ---
+node_modules/
+dist/
+dist-ssr/
+frontend/coverage/
+*.local
+
+# --- Logs ---
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# --- Bitácora personal de portafolio (no versionada) ---
 memory.md
 CLAUDE.md
+
+# --- Sistema / editores ---
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.cache
+*.suo
+*.sw?
+
+# skill de estándares personal (se gestiona en ~/.claude/skills, no en el repo)
+skill.md
