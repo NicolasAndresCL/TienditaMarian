@@ -172,6 +172,10 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SORT_OPERATIONS": True,
+    # Deja en el esquema solo /api/v1/. Sin esto, las rutas v0 deprecadas
+    # (strangler-fig) colisionan en operationId con sus equivalentes v1 y generan
+    # ~46 warnings W001 que hacen fallar `check --deploy --fail-level WARNING`.
+    "PREPROCESSING_HOOKS": ["core.api.spectacular_hooks.excluir_rutas_legacy"],
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
