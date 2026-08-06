@@ -1,0 +1,93 @@
+# Entorno full-stack local: PostgreSQL + backend Django + frontend React + MailHog.
+#
+#   docker compose up --build
+#   → Frontend  http://localhost:5173   (SPA servida por nginx)
+#   → API       http://localhost:8000
+#   → Salud API http://localhost:8000/healthz/
+#   → Correos   http://localhost:8025   (MailHog: los mails de la tienda caen ahí)
+#
+# Este compose de la RAÍZ reemplaza al viejo backend/docker-compose.yml (que solo
+# levantaba db + mailhog + backend). Ahora orquesta también el frontend.
+#
+# Levantar esto es además la única forma de correr el test de concurrencia del
+# checkout: SQLite ignora select_for_update, así que ese test solo prueba algo
+# real contra PostgreSQL.
+#
+#   docker compose run --rm backend pytest -rs
+#
+# Requiere un .env en la raíz (al menos SECRET_KEY). Ver backend/.env.example.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tiendita}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tiendita}
+      POSTGRES_DB: ${POSTGRES_DB:-tiendita_marian}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      # El backend espera a que la base esté LISTA, no solo levantada: sin esto,
+      # el `migrate` del arranque falla por conexión rechazada.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tiendita}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # interfaz web
+    # Sin healthcheck: es un buzón efímero y el backend solo lo requiere "started",
+    # no "healthy" (no bloquea el arranque si tarda un instante en responder).
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      SECRET_KEY: ${SECRET_KEY:?define SECRET_KEY en tu .env}
+      DEBUG: "False"
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DATABASE_URL: postgres://${POSTGRES_USER:-tiendita}:${POSTGRES_PASSWORD:-tiendita}@db:5432/${POSTGRES_DB:-tiendita_marian}
+      # El contenedor local no tiene TLS: sin esto, SECURE_SSL_REDIRECT haría un
+      # bucle infinito de redirecciones a https.
+      SECURE_HTTPS: "False"
+      # Debe incluir el origen del frontend o el navegador bloqueará las llamadas.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      EMAIL_HOST: mailhog
+      EMAIL_PORT: "1025"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - media_data:/app/media
+    # El healthcheck lo define backend/Dockerfile (curl a /healthz/); el arranque
+    # (migrate + collectstatic + gunicorn) también está en su CMD: no se duplica.
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Se hornea en el bundle en tiempo de build (Vite embebe las VITE_*). En
+        # prod se cambia por el dominio público de la API.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    depends_on:
+      # Solo ordena el arranque; la SPA es estática y llama a la API desde el
+      # navegador, así que no necesita esperar a que el backend esté "healthy".
+      backend:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    # El healthcheck (wget a /) lo define frontend/Dockerfile.
+
+volumes:
+  postgres_data:
+  media_data:

@@ -1,0 +1,34 @@
+# Fuera del contexto de build: infla la imagen o mete cosas que no deben viajar.
+
+# Dependencias y artefactos: se reinstalan/regeneran dentro del build.
+node_modules
+dist
+dist-ssr
+
+# Variables de entorno. Todo lo VITE_* se embebe en el bundle público, pero el
+# hábito de no meter .env en una capa de imagen es innegociable.
+.env
+.env.*
+!.env.example
+
+# Control de versiones y CI.
+.git
+.gitignore
+.github
+
+# Tests y cobertura.
+coverage
+
+# Logs.
+*.log
+npm-debug.log*
+
+# Editor / SO.
+.vscode
+.idea
+.DS_Store
+
+# Docker y documentación: no hacen falta dentro de la imagen.
+Dockerfile
+.dockerignore
+*.md
