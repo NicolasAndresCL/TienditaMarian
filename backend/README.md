@@ -27,12 +27,17 @@ python manage.py runserver
 
 ### Con Docker (PostgreSQL + MailHog)
 
+Este `backend/` es parte del monorepo TienditaMarian. El `docker-compose.yml` vive
+en la **raíz** del monorepo y levanta todo (backend + frontend + PostgreSQL +
+MailHog):
+
 ```bash
+cd ..            # a la raíz del monorepo
 docker compose up --build
 ```
 
-Levanta la base, el backend y un buzón de correo en <http://localhost:8025>, donde
-caen los mails de confirmación de compra.
+MailHog queda en <http://localhost:8025>, donde caen los mails de confirmación de
+compra. El runbook completo está en [`../pasos.md`](../pasos.md).
 
 ---
 
@@ -147,9 +152,10 @@ permisos. Si un test pasa aquí, pasa contra la aplicación que se despliega.
 
 ⚠️ El test de concurrencia del checkout **se salta en SQLite**: ese motor ignora
 `select_for_update`, así que el test pasaría sin probar nada. El CI levanta un
-PostgreSQL para ejecutarlo de verdad. En local:
+PostgreSQL para ejecutarlo de verdad. En local, desde la raíz del monorepo:
 
 ```bash
+cd ..
 docker compose run --rm backend pytest -rs
 ```
 
