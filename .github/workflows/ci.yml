@@ -1,0 +1,173 @@
+name: CI
+
+# Monorepo TienditaMarian: backend (Django + DRF) y frontend (React + Vite).
+# GitHub Actions solo lee workflows desde `.github/workflows/` en la RAÍZ del
+# repo, por eso este archivo vive aquí y no dentro de `backend/`.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+# Permisos mínimos por defecto: los jobs solo necesitan leer el código.
+# Si algún job necesitara más (p. ej. publicar una imagen), se amplía solo ahí.
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Backend rápido: lint + tests con cobertura contra SQLite en memoria.
+  # `config.settings.test` inyecta sus propios defaults, así que corre en un
+  # checkout limpio sin `.env` ni secretos.
+  # ---------------------------------------------------------------------------
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          # El cache de pip necesita saber qué archivo define las dependencias;
+          # como el default working-directory no aplica a la action, va la ruta
+          # completa desde la raíz del repo.
+          cache-dependency-path: backend/requirements/dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Tests + cobertura
+        # --cov-fail-under convierte la cobertura en condición de fallo,
+        # no en una métrica decorativa que se imprime y se ignora.
+        run: pytest --cov --cov-report=term-missing --cov-fail-under=70
+
+  # ---------------------------------------------------------------------------
+  # Backend contra PostgreSQL real: SQLite ignora `select_for_update` en
+  # silencio, así que el test de concurrencia del checkout solo prueba algo
+  # de verdad aquí, contra el motor de producción.
+  # ---------------------------------------------------------------------------
+  backend-postgres:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tiendita
+          POSTGRES_PASSWORD: tiendita
+          POSTGRES_DB: tiendita_test
+        ports:
+          - 5432:5432
+        # Healthcheck: el job no arranca hasta que Postgres acepta conexiones.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DATABASE_URL: postgres://tiendita:tiendita@localhost:5432/tiendita_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements/dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/dev.txt
+
+      - name: Tests contra PostgreSQL
+        # -rs muestra los skips: si el test de concurrencia apareciera saltado
+        # aquí, sería señal de que NO está corriendo contra Postgres de verdad.
+        run: pytest -rs
+
+  # ---------------------------------------------------------------------------
+  # Hardening de despliegue: valida la config de producción (SSL redirect,
+  # HSTS, cookies secure, fortaleza de SECRET_KEY) sin que un settings
+  # inseguro llegue a producción sin que nadie se entere.
+  # ---------------------------------------------------------------------------
+  backend-deploy-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements/prod.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/prod.txt
+
+      - name: check --deploy
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          ALLOWED_HOSTS: tienditademarian.com
+          DATABASE_URL: sqlite:///db.sqlite3
+          SECURE_HTTPS: 'True'
+        run: |
+          # Clave efímera solo para el check: no sirve tráfico ni se guarda.
+          # `check --deploy` rechaza claves cortas o autogeneradas por Django,
+          # así fallaría por la clave y no por el hardening real.
+          export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+          python manage.py check --deploy --fail-level WARNING
+
+  # ---------------------------------------------------------------------------
+  # Frontend: lint + tests + build. El `npm run build` verifica que el
+  # frontend CONSTRUYE de verdad, no solo que pasa el linter.
+  # ---------------------------------------------------------------------------
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # `npm ci` instala exactamente lo del lockfile (reproducible), a
+      # diferencia de `npm install` que puede actualizar versiones.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Tests (vitest)
+        run: npm test
+
+      - name: Build (vite)
+        run: npm run build

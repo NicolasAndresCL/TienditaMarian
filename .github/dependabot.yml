@@ -1,0 +1,35 @@
+version: 2
+
+# Higiene de dependencias del monorepo: Dependabot abre PRs semanales con
+# actualizaciones por cada ecosistema. Directorios relativos a la RAÍZ del repo.
+updates:
+  # --- Backend (Python / pip) --------------------------------------------
+  # Los requirements viven en backend/requirements/{base,dev,prod}.txt.
+  - package-ecosystem: pip
+    directory: /backend/requirements
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - backend
+
+  # --- Frontend (Node / npm) ---------------------------------------------
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - frontend
+
+  # --- GitHub Actions ----------------------------------------------------
+  # Mantiene al día las versiones de las actions usadas en los workflows.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - ci
