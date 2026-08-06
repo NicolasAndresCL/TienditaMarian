@@ -14,8 +14,9 @@ class Producto(models.Model):
       serializer (antes era `IntegerField`: se podía guardar stock = -5);
     - el `CheckConstraint` lo impide en la **base de datos**, que es la única
       barrera que un `queryset.update()` o una consulta cruda no pueden saltarse;
-    - `StockService` valida antes de descontar, para dar un error de negocio
-      entendible en vez de un IntegrityError.
+    - `CheckoutService._validar_stock` valida antes de descontar, para dar un
+      error de negocio entendible (`StockInsuficienteError`) en vez de un
+      IntegrityError crudo.
     """
 
     nombre = models.CharField(max_length=100)

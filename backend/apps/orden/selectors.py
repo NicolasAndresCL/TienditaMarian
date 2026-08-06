@@ -7,7 +7,7 @@ Capa de acceso a datos (skill §2.1): aquí viven los querysets, con sus
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.db.models import QuerySet
@@ -78,7 +78,3 @@ def filtrar_ordenes(
         queryset = queryset.filter(pagado=esta_pagado)
 
     return queryset
-
-
-def ordenes_del_ultimo_mes(usuario: AbstractBaseUser) -> QuerySet[Orden]:
-    return ordenes_de(usuario).filter(creado__gte=date.today() - timedelta(days=30))

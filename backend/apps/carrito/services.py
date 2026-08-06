@@ -147,10 +147,6 @@ class CarritoService:
     def vaciar(self) -> None:
         self.carrito.items.all().delete()
 
-    def subtotal(self) -> Decimal:
-        items = self.carrito.items.select_related("producto")
-        return sum((i.producto.precio * i.cantidad for i in items), CERO)
-
 
 class CheckoutService:
     """Convierte un carrito en una orden: valida, cobra el stock y registra.
