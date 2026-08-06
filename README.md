@@ -43,7 +43,7 @@ está en **[`pasos.md`](pasos.md)**.
 |---|---|---|
 | Stack | Django 5.2 · DRF · SimpleJWT · PostgreSQL | React 19 · Vite 7 · Tailwind 4 |
 | Arranque | `python manage.py runserver` | `npm run dev` |
-| Tests | `pytest` (121) | `npm test` (12) |
+| Tests | `pytest` (124) | `npm test` (12) |
 | Lint | `ruff check .` | `npm run lint` |
 | Detalle | [`backend/README.md`](backend/README.md) | `frontend/package.json` |
 
