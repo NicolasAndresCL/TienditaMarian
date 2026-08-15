@@ -27,7 +27,7 @@ jobs:
     env:
       DJANGO_SETTINGS_MODULE: config.settings.test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -86,7 +86,7 @@ jobs:
       DATABASE_URL: postgres://tiendita:tiendita@localhost:5432/tiendita_test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
@@ -115,7 +115,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
@@ -151,7 +151,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -197,7 +197,7 @@ jobs:
       SECRET_KEY: ci-clave-efimera-solo-para-el-humo-no-sirve-trafico
       POSTGRES_PORT: '5432'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Levantar el stack
         run: docker compose up --build -d
