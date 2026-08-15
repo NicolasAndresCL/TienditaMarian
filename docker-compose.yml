@@ -13,7 +13,11 @@
 # checkout: SQLite ignora select_for_update, así que ese test solo prueba algo
 # real contra PostgreSQL.
 #
-#   docker compose run --rm backend pytest -rs
+#   docker compose --profile test run --rm tests
+#
+# (contra el servicio `backend` NO funciona: su imagen instala solo
+# requirements/prod.txt y no lleva pytest. De ahí el servicio `tests`, que
+# construye el target `dev` del mismo Dockerfile.)
 #
 # Requiere un .env en la raíz (al menos SECRET_KEY). Ver backend/.env.example.
 
@@ -65,10 +69,17 @@ services:
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
       EMAIL_HOST: mailhog
       EMAIL_PORT: "1025"
+      # Con DEBUG=False, Django no publica /media/ y WhiteNoise solo sirve los
+      # estáticos: sin esto las fotos del catálogo dan 404 (ver config/urls.py).
+      SERVE_MEDIA: "True"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
-      - media_data:/app/media
+      # Bind mount, no volumen anónimo: el `media_data` anterior se montaba VACÍO
+      # encima de /app/media y tapaba el catálogo de demostración, así que
+      # `cargar_productos` no encontraba ni una imagen dentro del contenedor.
+      # Además así las fotos que suba la tienda quedan en el repo de trabajo.
+      - ./backend/media:/app/media
     # El healthcheck lo define backend/Dockerfile (curl a /healthz/); el arranque
     # (migrate + collectstatic + gunicorn) también está en su CMD: no se duplica.
 
@@ -88,6 +99,26 @@ services:
       - "${FRONTEND_PORT:-5173}:80"
     # El healthcheck (wget a /) lo define frontend/Dockerfile.
 
+  # Suite completa contra PostgreSQL real. No arranca con `up`: vive tras un
+  # profile y se invoca a demanda.
+  #
+  #   docker compose --profile test run --rm tests
+  #
+  # El target `dev` del Dockerfile es el que instala requirements/dev.txt (la
+  # imagen de producción no lleva pytest). Usa su propia base para no pisar los
+  # datos de la tienda.
+  tests:
+    profiles: ["test"]
+    build:
+      context: ./backend
+      target: dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      SECRET_KEY: test-insecure-key-not-for-production
+      DATABASE_URL: postgres://${POSTGRES_USER:-tiendita}:${POSTGRES_PASSWORD:-tiendita}@db:5432/${POSTGRES_DB:-tiendita_marian}
+
 volumes:
   postgres_data:
-  media_data:

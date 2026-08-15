@@ -6,7 +6,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://tiendita:tiendita@localhost:5432/tiendita_marian"
+        "postgresql://tiendita:tiendita@localhost:5433/tiendita_marian"
       ],
       "env": {}
     }

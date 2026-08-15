@@ -22,6 +22,25 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade pip \
     && /opt/venv/bin/pip install -r requirements/prod.txt
 
+# ---------------------------------------------------------------- dev / tests
+# La imagen de producción NO trae pytest (instala solo requirements/prod.txt),
+# así que el `docker compose run --rm backend pytest` que documentábamos fallaba
+# con "pytest: not found". Este target sí lo trae: es el que usa el servicio
+# `tests` del compose para correr la suite contra PostgreSQL real, donde
+# `select_for_update` existe y el test de concurrencia del checkout prueba algo.
+FROM builder AS dev
+
+WORKDIR /app
+
+RUN /opt/venv/bin/pip install -r requirements/dev.txt
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    DJANGO_SETTINGS_MODULE=config.settings.test
+
+COPY . .
+
+CMD ["pytest", "-rs"]
+
 # ---------------------------------------------------------------- runtime
 FROM python:3.12-slim AS runtime
 
