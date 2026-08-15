@@ -1,38 +1,49 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { normalizarError } from './client';
-import { guardarTokens, leerTokens, borrarTokens, haySesion } from './tokens';
+import { leerTokenCsrf } from './tokens';
 
 /**
  * El frontend no tenía NI UN test. Estos cubren lo que más duele si se rompe:
  * la sesión y la interpretación de los errores del backend.
+ *
+ * Los que probaban `guardarTokens`/`leerTokens` desaparecieron con lo que
+ * probaban: los JWT ya no se guardan aquí, viven en cookies httpOnly que este
+ * código no puede leer. Lo que sí queda del lado del navegador es el token
+ * CSRF, que es lo que se prueba ahora.
  */
 
-describe('almacenamiento de la sesión', () => {
-  beforeEach(() => localStorage.clear());
-
-  it('guarda y recupera los dos tokens', () => {
-    guardarTokens({ access: 'abc', refresh: 'xyz' });
-
-    expect(leerTokens()).toEqual({ access: 'abc', refresh: 'xyz' });
+describe('token CSRF', () => {
+  beforeEach(() => {
+    // jsdom acumula cookies entre tests; se limpian caducándolas.
+    document.cookie.split('; ').forEach((cookie) => {
+      const nombre = cookie.split('=')[0];
+      if (nombre) document.cookie = `${nombre}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    });
   });
 
-  it('guarda el refresh, que antes se descartaba', () => {
-    guardarTokens({ access: 'abc', refresh: 'xyz' });
+  it('lee el token de la cookie que deja el backend', () => {
+    document.cookie = 'csrftoken=abc123';
 
-    expect(leerTokens().refresh).toBe('xyz');
+    expect(leerTokenCsrf()).toBe('abc123');
   });
 
-  it('borra la sesión entera al salir', () => {
-    guardarTokens({ access: 'abc', refresh: 'xyz' });
+  it('lo encuentra aunque haya otras cookies delante', () => {
+    document.cookie = 'otra=loquesea';
+    document.cookie = 'csrftoken=xyz789';
 
-    borrarTokens();
-
-    expect(haySesion()).toBe(false);
-    expect(leerTokens()).toEqual({ access: null, refresh: null });
+    expect(leerTokenCsrf()).toBe('xyz789');
   });
 
-  it('sin tokens no hay sesión', () => {
-    expect(haySesion()).toBe(false);
+  it('devuelve null si todavía no hay token', () => {
+    expect(leerTokenCsrf()).toBeNull();
+  });
+
+  it('no confunde una cookie cuyo nombre TERMINA en csrftoken', () => {
+    // `startsWith('csrftoken=')` sobre cada cookie ya separada evita el clásico
+    // falso positivo de buscar la subcadena en la cadena entera.
+    document.cookie = 'nocsrftoken=impostor';
+
+    expect(leerTokenCsrf()).toBeNull();
   });
 });
 

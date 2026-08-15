@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as servicios from '../services';
-import { haySesion, borrarTokens } from '../api/tokens';
 import { AuthContext } from './contextos';
 
 /**
@@ -9,14 +8,36 @@ import { AuthContext } from './contextos';
  * Antes el token vivía en un `useState` de App y se prop-drilleaba hasta cada
  * ProductoCard junto con un callback `onRequireLogin`. Con un nivel más de
  * anidamiento eso se vuelve inmanejable.
+ *
+ * Con la sesión en cookies httpOnly este componente ya no puede inspeccionar el
+ * token para saber si hay sesión: se lo pregunta al backend (`/auth/me/`) al
+ * montar. Eso arregla de paso un detalle que antes fallaba — al recargar la
+ * página se sabía que había sesión pero no de quién era, así que el nombre
+ * desaparecía de la barra hasta el siguiente login.
  */
 export function AuthProvider({ children }) {
-  const [autenticado, setAutenticado] = useState(haySesion);
   const [usuario, setUsuario] = useState(null);
   const [error, setError] = useState(null);
+  // `null` = todavía no sabemos. Importa para no mandar al login a alguien que
+  // sí tiene sesión solo porque la comprobación aún no volvió.
+  const [autenticado, setAutenticado] = useState(null);
 
-  // El cliente HTTP avisa cuando el refresh token ya no sirve. Antes, al expirar
-  // la sesión la app se quedaba muerta sin decir nada.
+  useEffect(() => {
+    let vigente = true;
+
+    servicios.obtenerSesion().then((sesion) => {
+      if (!vigente) return;
+      setUsuario(sesion);
+      setAutenticado(Boolean(sesion));
+    });
+
+    return () => {
+      vigente = false;
+    };
+  }, []);
+
+  // El cliente HTTP avisa cuando la sesión ya no sirve. Antes, al expirar, la
+  // app se quedaba muerta sin decir nada.
   useEffect(() => {
     const alExpirar = () => {
       setAutenticado(false);
@@ -32,8 +53,8 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       await servicios.login(username, password);
+      setUsuario(await servicios.obtenerSesion());
       setAutenticado(true);
-      setUsuario({ username });
       return true;
     } catch (fallo) {
       // Se muestra el mensaje real del backend. El código anterior decía
@@ -47,8 +68,8 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       const respuesta = await servicios.registrar(datos);
-      setAutenticado(true);
       setUsuario(respuesta.usuario);
+      setAutenticado(true);
       return true;
     } catch (fallo) {
       setError(fallo);
@@ -60,15 +81,23 @@ export function AuthProvider({ children }) {
     try {
       await servicios.logout();
     } catch {
-      borrarTokens();
+      // Las cookies las borra el servidor; si la petición falla, la sesión local
+      // se cierra igual y el token caduca solo.
     } finally {
       setAutenticado(false);
       setUsuario(null);
     }
   }, []);
 
-  const valor = { autenticado, usuario, error, entrar, registrarse, salir, limpiarError: () => setError(null) };
+  const valor = {
+    autenticado,
+    usuario,
+    error,
+    entrar,
+    registrarse,
+    salir,
+    limpiarError: () => setError(null),
+  };
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
 }
-

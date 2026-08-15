@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { leerTokens, guardarTokens, borrarTokens } from './tokens';
+import { leerTokenCsrf } from './tokens';
 
 /**
  * Cliente HTTP único de la aplicación.
@@ -11,27 +11,43 @@ import { leerTokens, guardarTokens, borrarTokens } from './tokens';
  * Lo más grave era la sesión: el backend devuelve { access, refresh } y el
  * `refresh` se **descartaba**. Cuando el access expiraba (15 minutos), la app
  * quedaba en un estado roto silencioso: no reintentaba, no deslogueaba, no
- * avisaba. Simplemente dejaba de funcionar.
+ * avisaba.
+ *
+ * Hoy la sesión ya no la maneja este archivo en absoluto: vive en cookies
+ * `HttpOnly` que pone el backend y que el navegador adjunta sola. Aquí solo
+ * queda `withCredentials` —para que esas cookies viajen aunque la API esté en
+ * otro puerto— y el token CSRF, que es el precio de que el navegador autentique
+ * por su cuenta.
  */
-const api = axios.create({
+const configuracionComun = {
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,
   headers: { 'Content-Type': 'application/json' },
-});
+  // Sin esto el navegador NO manda las cookies a otro origen (:5173 → :8000) ni
+  // guarda las que el backend devuelve: la sesión no existiría.
+  withCredentials: true,
+};
+
+const api = axios.create(configuracionComun);
 
 /** Cliente sin interceptores, para renovar el token sin caer en un bucle. */
-const apiSinAuth = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,
-  headers: { 'Content-Type': 'application/json' },
-});
+const apiSinAuth = axios.create(configuracionComun);
 
-// Petición: inyecta el Bearer en cada llamada.
-api.interceptors.request.use((config) => {
-  const { access } = leerTokens();
-  if (access) {
-    config.headers.Authorization = `Bearer ${access}`;
+// Petición: el token CSRF va en cada llamada que escribe. El de sesión ya no se
+// toca — lo pone el navegador y este código ni siquiera puede verlo.
+const metodosQueEscriben = ['post', 'put', 'patch', 'delete'];
+
+function agregarCsrf(config) {
+  if (metodosQueEscriben.includes(config.method)) {
+    const token = leerTokenCsrf();
+    if (token) {
+      config.headers['X-CSRFToken'] = token;
+    }
   }
   return config;
-});
+}
+
+api.interceptors.request.use(agregarCsrf);
+apiSinAuth.interceptors.request.use(agregarCsrf);
 
 // Si varias peticiones reciben 401 a la vez, solo se renueva el token UNA vez y
 // las demás esperan a esa misma promesa. Sin esto, cinco llamadas simultáneas
@@ -40,16 +56,13 @@ api.interceptors.request.use((config) => {
 let renovacionEnCurso = null;
 
 async function renovarAccess() {
-  const { refresh } = leerTokens();
-  if (!refresh) throw new Error('sin refresh token');
-
-  const { data } = await apiSinAuth.post('/auth/token/refresh/', { refresh });
-  // El backend rota el refresh: hay que guardar el nuevo, si viene.
-  guardarTokens({ access: data.access, refresh: data.refresh ?? refresh });
-  return data.access;
+  // El refresh no se manda: viaja en su propia cookie httpOnly, que este código
+  // no puede leer. El backend la lee y reescribe ambas cookies con los tokens
+  // nuevos (rotación).
+  await apiSinAuth.post('/auth/token/refresh/', {});
 }
 
-// Respuesta: ante un 401, renueva el token y reintenta la petición original.
+// Respuesta: ante un 401, renueva la sesión y reintenta la petición original.
 api.interceptors.response.use(
   (respuesta) => respuesta,
   async (error) => {
@@ -66,14 +79,14 @@ api.interceptors.response.use(
 
     try {
       renovacionEnCurso = renovacionEnCurso ?? renovarAccess();
-      const nuevoAccess = await renovacionEnCurso;
+      await renovacionEnCurso;
       renovacionEnCurso = null;
 
-      original.headers.Authorization = `Bearer ${nuevoAccess}`;
+      // No hay que tocar cabeceras: la cookie nueva ya está puesta y el
+      // navegador la adjunta en el reintento.
       return api(original);
     } catch (fallo) {
       renovacionEnCurso = null;
-      borrarTokens();
       // Avisa a la app para que redirija al login, en vez de dejar la interfaz
       // colgada sin explicación.
       window.dispatchEvent(new CustomEvent('sesion-expirada'));

@@ -1,37 +1,24 @@
 /**
- * Único lugar que toca el almacenamiento de la sesión.
+ * Lectura del token CSRF.
  *
- * Antes el token lo guardaba el componente `Login` con un `localStorage.setItem`
- * suelto, y además lo subía por un callback: dos fuentes de verdad para la misma
- * sesión. El `refresh` ni se guardaba, y no existía ningún `logout`
- * (`removeItem` no aparecía en el proyecto).
+ * Este archivo guardaba los JWT en `localStorage`. Ya no: la sesión vive en
+ * cookies `HttpOnly` que el navegador manda sola y que **ningún JavaScript
+ * puede leer**, ni el nuestro ni el que inyecte un XSS. Por eso desaparecieron
+ * `leerTokens`, `guardarTokens` y `borrarTokens`: no hay nada que guardar.
  *
- * Nota de seguridad: `localStorage` es accesible desde JavaScript, así que un XSS
- * puede robar el token. Lo correcto sería una cookie httpOnly, pero eso exige que
- * el backend fije la cookie y cambiar el flujo de JWT entero. Mientras tanto, la
- * mitigación real es que el access dura 15 minutos y el logout invalida el
- * refresh en el servidor (blacklist).
+ * A cambio, como el navegador adjunta la sesión por su cuenta, un sitio ajeno
+ * podría provocar peticiones a la API en nombre de la usuaria. La defensa es el
+ * token CSRF: el backend lo deja en una cookie legible (a propósito) y aquí se
+ * lee para reenviarlo en la cabecera `X-CSRFToken`. Un sitio ajeno no puede
+ * leer esa cookie —la política de mismo origen se lo impide— así que no puede
+ * construir la cabecera.
  */
-const CLAVE_ACCESS = 'tiendita.access';
-const CLAVE_REFRESH = 'tiendita.refresh';
+const COOKIE_CSRF = 'csrftoken';
 
-export function leerTokens() {
-  return {
-    access: localStorage.getItem(CLAVE_ACCESS),
-    refresh: localStorage.getItem(CLAVE_REFRESH),
-  };
-}
+export function leerTokenCsrf() {
+  const encontrada = document.cookie
+    .split('; ')
+    .find((cookie) => cookie.startsWith(`${COOKIE_CSRF}=`));
 
-export function guardarTokens({ access, refresh }) {
-  if (access) localStorage.setItem(CLAVE_ACCESS, access);
-  if (refresh) localStorage.setItem(CLAVE_REFRESH, refresh);
-}
-
-export function borrarTokens() {
-  localStorage.removeItem(CLAVE_ACCESS);
-  localStorage.removeItem(CLAVE_REFRESH);
-}
-
-export function haySesion() {
-  return Boolean(localStorage.getItem(CLAVE_ACCESS));
+  return encontrada ? decodeURIComponent(encontrada.split('=')[1]) : null;
 }

@@ -11,14 +11,15 @@
  * sesión cuando expira.
  */
 import api, { apiSinAuth } from '../api/client';
-import { guardarTokens, borrarTokens, leerTokens } from '../api/tokens';
 
 // ---------------------------------------------------------------- auth
+//
+// Ninguna de estas funciones toca el token: la sesión vive en cookies httpOnly
+// que pone y quita el backend. Antes había que guardarlo, pasarlo y borrarlo a
+// mano, y el `refresh` sencillamente se descartaba.
 
 export async function login(username, password) {
   const { data } = await apiSinAuth.post('/auth/token/', { username, password });
-  // El refresh se guarda: antes se descartaba y la sesión moría en silencio.
-  guardarTokens({ access: data.access, refresh: data.refresh });
   return data;
 }
 
@@ -29,20 +30,42 @@ export async function registrar({ username, email, password, passwordConfirm }) 
     password,
     password_confirm: passwordConfirm,
   });
-  // El registro ya deja la sesión iniciada: el backend devuelve los tokens.
-  guardarTokens(data.token);
+  // El registro ya deja la sesión iniciada: el backend manda las cookies.
   return data;
 }
 
 export async function logout() {
-  const { refresh } = leerTokens();
+  // Invalida el refresh en el servidor (blacklist) y borra las cookies. Sin
+  // esto, un token robado seguiría siendo válido durante días aunque la usuaria
+  // hubiera cerrado sesión.
+  await api.post('/auth/logout/', {});
+}
+
+/** Quién es la sesión actual, o `null` si no hay ninguna.
+ *
+ * El frontend ya no puede mirar el token para saberlo —es httpOnly—, así que lo
+ * pregunta. De paso resuelve algo que antes fallaba: al recargar la página se
+ * sabía que había sesión pero no de quién era, y el nombre desaparecía de la
+ * barra hasta el siguiente login.
+ */
+export async function obtenerSesion() {
+  // Va por `apiSinAuth` a propósito: con el cliente normal, un 401 aquí
+  // dispararía el interceptor de renovación y, al fallar, el evento
+  // `sesion-expirada`. Es decir, a un visitante que NUNCA inició sesión se le
+  // mostraría "Tu sesión expiró" nada más abrir la tienda.
   try {
-    // Invalida el refresh en el servidor (blacklist). Sin esto, un token robado
-    // seguiría siendo válido durante días aunque el usuario cerrara sesión.
-    if (refresh) await api.post('/auth/logout/', { refresh });
-  } finally {
-    // Pase lo que pase en el servidor, la sesión local se cierra.
-    borrarTokens();
+    const { data } = await apiSinAuth.get('/auth/me/');
+    return data;
+  } catch {
+    // Puede que solo haya caducado el access (dura 15 minutos) y el refresh
+    // siga vivo en su cookie. Se intenta una vez, explícitamente.
+    try {
+      await apiSinAuth.post('/auth/token/refresh/', {});
+      const { data } = await apiSinAuth.get('/auth/me/');
+      return data;
+    } catch {
+      return null;
+    }
   }
 }
 
