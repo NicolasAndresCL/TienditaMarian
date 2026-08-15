@@ -132,15 +132,16 @@ aplicación y un `CheckConstraint` de `stock >= 0` protege desde la base. Esa
 Autenticación: `Authorization: Bearer <access>`. El access dura 15 minutos, el
 refresh rota, y el `logout` lo invalida de verdad (blacklist).
 
-> Las rutas antiguas (`/api/productos/productos/`) siguen respondiendo mientras se
-> migra el frontend, y se eliminarán después.
+> Las rutas antiguas (`/api/productos/productos/`, `/api/carrito/carrito/add/`…)
+> convivieron con estas mientras el frontend migraba y **ya se eliminaron**: hoy
+> devuelven 404 y un test lo verifica.
 
 ---
 
 ## Tests
 
 ```bash
-pytest                            # 124 tests
+pytest                            # 135 tests · 92 % de cobertura
 pytest --cov                      # con cobertura
 ruff check .                      # lint
 python manage.py check --deploy   # hardening de producción
@@ -156,8 +157,12 @@ PostgreSQL para ejecutarlo de verdad. En local, desde la raíz del monorepo:
 
 ```bash
 cd ..
-docker compose run --rm backend pytest -rs
+docker compose --profile test run --rm tests
 ```
+
+El servicio `tests` construye el target `dev` del `Dockerfile`, que es el único que
+instala `requirements/dev.txt`. Contra el servicio `backend` daría `pytest: not
+found`: su imagen es la de producción.
 
 ---
 

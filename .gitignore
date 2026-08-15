@@ -46,6 +46,11 @@ pnpm-debug.log*
 # --- Bitácora personal de portafolio (no versionada) ---
 memory.md
 CLAUDE.md
+# Registro local de trabajo abierto: nombra rutas y debilidades del entorno.
+pendientes.md
+
+# --- Artefactos de QA con navegador (Playwright MCP) ---
+.playwright-mcp/
 
 # --- Sistema / editores ---
 .DS_Store

@@ -24,13 +24,20 @@ TienditaMarian/
 ```bash
 # genera un SECRET_KEY y ponlo en el entorno o en un .env de la raíz
 docker compose up --build
+docker compose exec backend python manage.py cargar_productos   # catálogo de demostración
 ```
 
-- Tienda (frontend) → puerto publicado por el servicio `frontend`
+- Tienda (frontend) → <http://localhost:5173>
 - API → <http://localhost:8000/api/v1/>
 - Documentación → <http://localhost:8000/api/schema/swagger-ui/>
 - Correos de prueba (MailHog) → <http://localhost:8025>
 - Salud del servicio → <http://localhost:8000/healthz/>
+- PostgreSQL → `localhost:5433` (`POSTGRES_PORT` en el `.env` de la raíz)
+
+> Dos trampas del `.env` de la raíz, ambas silenciosas: **el `SECRET_KEY` no puede
+> llevar `$` sin escapar** (Compose lo interpola y la clave llega truncada), y **no
+> es intercambiable con `backend/.env`** — el de la raíz usa el host `db`, que solo
+> resuelve dentro de la red de Compose. Detalle en [`pasos.md`](pasos.md).
 
 **Sin Docker** (venv + npm): el paso a paso completo, para Windows y Linux/Mac,
 está en **[`pasos.md`](pasos.md)**.
@@ -43,9 +50,12 @@ está en **[`pasos.md`](pasos.md)**.
 |---|---|---|
 | Stack | Django 5.2 · DRF · SimpleJWT · PostgreSQL | React 19 · Vite 7 · Tailwind 4 |
 | Arranque | `python manage.py runserver` | `npm run dev` |
-| Tests | `pytest` (124) | `npm test` (12) |
+| Tests | `pytest` (135, 92 % de cobertura) | `npm test` (12) |
 | Lint | `ruff check .` | `npm run lint` |
 | Detalle | [`backend/README.md`](backend/README.md) | `frontend/package.json` |
+
+Sobre SQLite pasan 134 y se salta el de concurrencia del checkout, que necesita
+PostgreSQL: `docker compose --profile test run --rm tests` corre los 135.
 
 El backend documenta su arquitectura por capas (`core/`, `services`, `selectors`),
 la decisión de diseño **ADR-001** (`GenericAPIView` + mixins sobre ViewSets) y el
@@ -55,8 +65,9 @@ flujo del checkout transaccional en su propio README.
 
 ## Arquitectura y despliegue
 
-- **API versionada** en `/api/v1/`, autenticación JWT (access corto + refresh con
-  rotación y blacklist), autorización a nivel de objeto.
+- **API versionada** en `/api/v1/` —y solo ahí: las rutas v0, que convivieron
+  mientras el frontend migraba, ya se retiraron—, autenticación JWT (access corto
+  + refresh con rotación y blacklist), autorización a nivel de objeto.
 - **Frontend desacoplado en despliegue** pero en el mismo repo: se construye
   aparte (`npm run build` → `dist/`) y consume la API por `VITE_API_BASE_URL`. En
   local ambos corren juntos vía `docker-compose.yml`.

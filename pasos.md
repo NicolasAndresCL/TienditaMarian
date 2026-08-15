@@ -5,9 +5,9 @@ Runbook de comandos para levantar, probar y desplegar el monorepo: `backend/`
 
 Todos los comandos están verificados contra los archivos reales del repo
 (`backend/README.md`, `backend/CLAUDE.md`, `backend/pyproject.toml`,
-`backend/manage.py`, `backend/config/settings/*.py`, `backend/docker-compose.yml`,
-`backend/Dockerfile`, `frontend/package.json`). Se muestran en PowerShell y en
-bash cuando difieren.
+`backend/manage.py`, `backend/config/settings/*.py`, `docker-compose.yml` —el de
+la **raíz**, que orquesta el monorepo completo—, `backend/Dockerfile`,
+`frontend/package.json`). Se muestran en PowerShell y en bash cuando difieren.
 
 ---
 
@@ -101,6 +101,14 @@ desarrollo: `DEBUG=True`, `DATABASE_URL` con SQLite si se comenta la línea de
 Postgres (ver §5), `CORS_ALLOWED_ORIGINS` apuntando al Vite de `:5173` y
 `EMAIL_BACKEND` de consola (los correos se imprimen en la terminal).
 
+> ⚠️ **`backend/.env` y el `.env` de la raíz NO son intercambiables.** El de la
+> raíz alimenta la interpolación `${...}` de `docker-compose.yml`; este lo lee
+> `django-environ` cuando Django corre **sin** Docker. Copiar uno sobre el otro
+> deja el backend local apuntando a `DATABASE_URL=postgres://…@db:5432/…`, y `db`
+> es el nombre del servicio de Compose: solo resuelve dentro de su red. El
+> síntoma es `failed to resolve host 'db'` al primer `migrate`. Sin Docker el
+> host va en `localhost`.
+
 Migrar, crear superusuario, cargar el catálogo de demostración y arrancar:
 
 ```bash
@@ -155,6 +163,16 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 # pegar el resultado en: TienditaMarian\.env → SECRET_KEY=...
 ```
 
+> ⚠️ **Escapá los `$` de la clave como `$$`.** Compose interpola `$var` al leer el
+> `.env`, así que una clave como `!nsk*$hic2l@…` llega **truncada** al contenedor:
+> `$hic2l` se resuelve como una variable vacía y solo queda un warning discreto
+> (`The "hic2l" variable is not set`). El `.env` versionado usa a propósito una
+> clave sin `$`.
+
+El compose también publica PostgreSQL en el host. Si ya tenés un PostgreSQL
+propio en el `5432`, el `up` falla con *port is already allocated*: definí otro
+puerto en el `.env` de la raíz (por defecto el repo trae `POSTGRES_PORT=5433`).
+
 Levantar todo desde la raíz del monorepo:
 
 ```powershell
@@ -173,21 +191,23 @@ Puertos que quedan expuestos:
 |---|---|---|
 | Backend (API) | <http://localhost:8000> | `gunicorn` detrás de `DJANGO_SETTINGS_MODULE=config.settings.prod` |
 | Salud | <http://localhost:8000/healthz/> | usado por el `HEALTHCHECK` del `Dockerfile` |
-| Frontend | <http://localhost:5173> | Vite apuntando a `VITE_API_BASE_URL=http://localhost:8000` |
-| PostgreSQL | `localhost:5432` | usuario/clave/DB por defecto: `tiendita` / `tiendita` / `tiendita_marian` |
+| Frontend | <http://localhost:5173> | SPA estática servida por nginx, construida con `VITE_API_BASE_URL=http://localhost:8000` |
+| PostgreSQL | `localhost:5433` | `POSTGRES_PORT` en el `.env` de la raíz; usuario/clave/DB: `tiendita` / `tiendita` / `tiendita_marian` |
 | MailHog (correos) | <http://localhost:8025> | ahí caen los correos de confirmación de compra |
 
-> Nota: si en tu checkout `docker-compose.yml` todavía vive en `backend/` en
-> vez de la raíz (versión anterior a la unificación del monorepo), corré los
-> mismos comandos desde `backend/` — el servicio se llama igual (`backend`).
-
-Migraciones y seed **dentro** del contenedor (no hace falta activar ningún venv):
+Las migraciones y el `collectstatic` **ya corren solos** en el `CMD` del
+`backend/Dockerfile`; lo que sí hay que hacer a mano es sembrar el catálogo y
+crear la cuenta de administración (no hace falta activar ningún venv):
 
 ```bash
-docker compose run --rm backend python manage.py migrate
-docker compose run --rm backend python manage.py createsuperuser
-docker compose run --rm backend python manage.py cargar_productos
+docker compose exec backend python manage.py cargar_productos
+docker compose exec backend python manage.py createsuperuser
 ```
+
+Las fotos del catálogo se sirven porque el compose define `SERVE_MEDIA=True` y
+monta `./backend/media` dentro del contenedor. Con `DEBUG=False`, Django no
+publica `/media/` por su cuenta y WhiteNoise solo sirve los estáticos: sin esas
+dos piezas la tienda se ve entera pero sin ni una imagen.
 
 Apagar todo (agregá `-v` si además querés borrar los volúmenes de Postgres y media):
 
@@ -211,11 +231,13 @@ source env/bin/activate
 ```
 
 ```bash
-pytest                            # 121 tests (config en pyproject.toml, settings de test)
+pytest                            # 135 tests (config en pyproject.toml, settings de test)
 pytest --cov                      # con reporte de cobertura
 ruff check .                      # lint (E, F, I, UP, B, DJ, C4, T20)
 python manage.py check --deploy   # hardening de producción
 ```
+
+Sobre SQLite pasan 134 y se salta 1: el de concurrencia del checkout.
 
 `check --deploy` solo reporta las advertencias de seguridad (HSTS, cookies
 seguras, SSL redirect, etc.) que están configuradas en
@@ -237,11 +259,16 @@ ignora `select_for_update`, así que ahí el test pasaría sin probar nada real.
 Para ejecutarlo de verdad hace falta PostgreSQL (Docker):
 
 ```bash
-docker compose run --rm backend pytest -rs
+docker compose --profile test run --rm tests
 ```
 
-El flag `-rs` muestra el motivo del *skip* cuando corre contra SQLite, y hace
-que se vea explícitamente que en Postgres sí se ejecuta.
+El servicio `tests` construye el target `dev` del `backend/Dockerfile` y corre
+`pytest -rs` contra el PostgreSQL del compose. El flag `-rs` muestra el motivo
+del *skip*, de modo que se ve explícitamente que aquí **no** se salta.
+
+> No uses el servicio `backend` para esto: su imagen instala solo
+> `requirements/prod.txt` y no lleva pytest (`pytest: not found`). Ese es
+> justamente el motivo de que exista el servicio `tests`.
 
 ### Frontend
 
@@ -267,7 +294,7 @@ docker run --name tiendita-postgres -d \
   -e POSTGRES_USER=tiendita \
   -e POSTGRES_PASSWORD=tiendita \
   -e POSTGRES_DB=tiendita_marian \
-  -p 5432:5432 \
+  -p 5433:5432 \
   postgres:16-alpine
 ```
 
@@ -277,11 +304,15 @@ docker run --name tiendita-postgres -d \
 docker compose up -d db
 ```
 
-En ambos casos, editar `backend/.env` y descomentar/ajustar:
+En ambos casos, editar `backend/.env` y ajustar (es lo que el repo ya trae):
 
 ```
-DATABASE_URL=postgres://tiendita:tiendita@localhost:5432/tiendita_marian
+DATABASE_URL=postgres://tiendita:tiendita@localhost:5433/tiendita_marian
 ```
+
+> Se publica en el **5433** y no en el 5432 porque este equipo tiene un PostgreSQL
+> nativo ocupando el puerto por defecto. Si el tuyo está libre, podés usar 5432 en
+> los dos sitios (`POSTGRES_PORT` en el `.env` de la raíz y aquí).
 
 Migrar y (opcionalmente) recargar el catálogo, ya que es una base nueva y vacía:
 
@@ -370,7 +401,8 @@ archivos estáticos o CDN (Netlify, Vercel, S3+CloudFront, nginx propio, etc.).
 | Apagar Docker + borrar datos | `docker compose down -v` |
 | Tests backend | `pytest` |
 | Tests backend con cobertura | `pytest --cov` |
-| Test de concurrencia (real, con Postgres) | `docker compose run --rm backend pytest -rs` |
+| Test de concurrencia (real, con Postgres) | `docker compose --profile test run --rm tests` |
+| Sembrar el catálogo demo (Docker) | `docker compose exec backend python manage.py cargar_productos` |
 | Lint backend | `ruff check .` |
 | Hardening de producción | `DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py check --deploy` |
 | Tests frontend | `npm test` |
