@@ -128,9 +128,24 @@ aplicación y un `CheckConstraint` de `stock >= 0` protege desde la base. Esa
 | `GET` `POST` | `/api/v1/descuentos/` | lectura: sesión · escritura: **staff** |
 | `GET` | `/api/v1/analytics/` | **staff** |
 | `POST` | `/api/v1/auth/{token,token/refresh,register,logout}/` | público |
+| `GET` | `/api/v1/auth/me/` | sesión |
 
-Autenticación: `Authorization: Bearer <access>`. El access dura 15 minutos, el
-refresh rota, y el `logout` lo invalida de verdad (blacklist).
+### Autenticación
+
+Dos vías, y la aplicación usa la primera:
+
+- **Cookies `HttpOnly`** (el navegador). El login y el registro dejan la sesión
+  en `tiendita_access` (15 min) y `tiendita_refresh` (7 días), invisibles para el
+  JavaScript de la página: un XSS ya no puede robar la sesión. Como el navegador
+  las manda solo, las peticiones que escriben exigen el token **CSRF** en la
+  cabecera `X-CSRFToken`.
+- **`Authorization: Bearer <access>`** (Swagger, scripts, clientes de API). El
+  `access` sigue viniendo en el cuerpo del login para esto. Por esta vía no se
+  pide CSRF: quien pone la cabecera a mano ya demuestra que controla la petición.
+
+El refresh rota en cada uso y el `logout` lo invalida de verdad (blacklist)
+además de borrar las cookies. `/auth/me/` existe porque el frontend ya no puede
+mirar el token para saber si hay sesión: lo pregunta.
 
 > Las rutas antiguas (`/api/productos/productos/`, `/api/carrito/carrito/add/`…)
 > convivieron con estas mientras el frontend migraba y **ya se eliminaron**: hoy
@@ -141,7 +156,7 @@ refresh rota, y el `logout` lo invalida de verdad (blacklist).
 ## Tests
 
 ```bash
-pytest                            # 150 tests · 92 % de cobertura
+pytest                            # 166 tests · 92 % de cobertura
 pytest --cov                      # con cobertura
 ruff check .                      # lint
 python manage.py check --deploy   # hardening de producción
@@ -168,6 +183,9 @@ found`: su imagen es la de producción.
 
 ## Seguridad
 
+- **La sesión no es accesible desde JavaScript**: los JWT viajan en cookies
+  `HttpOnly`, no en `localStorage`. Con ello la API pasa a ser vulnerable a CSRF,
+  así que se exige el token CSRF en toda escritura autenticada por cookie.
 - JWT con access corto (15 min), rotación de refresh y blacklist al cerrar sesión.
 - Throttling diferenciado: anónimo (60/min), usuario (300/min) y **login (10/min)**,
   que es el endpoint que se ataca por fuerza bruta.
