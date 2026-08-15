@@ -1,0 +1,29 @@
+# Normalización de finales de línea para todo el monorepo.
+#
+# El repo se trabaja en Windows y se ejecuta en Linux (contenedores y runners de
+# CI). Sin esto, un archivo commiteado con CRLF desde Windows llega al runner con
+# los `\r` dentro, y un script de shell muere con un error que no dice nada útil:
+#
+#     ./scripts/smoke.sh: /usr/bin/env: 'bash\r': No such file or directory
+#
+# Es un fallo silencioso y clásico: el archivo se ve perfecto en el editor.
+
+* text=auto eol=lf
+
+# Scripts que ejecuta Linux: LF siempre, sin excepción.
+*.sh text eol=lf
+
+# Estos solo los ejecuta Windows y necesitan CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binarios: que git no intente normalizar nada.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.jfif binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.sqlite3 binary
