@@ -51,7 +51,7 @@ def pago_ajeno(db, usuario, orden_ajena):
 
 @pytest.mark.django_db
 def test_un_intruso_no_puede_leer_el_envio_de_otro(otro_client, envio_ajeno):
-    respuesta = otro_client.get(f"/api/envios/{envio_ajeno.id}/")
+    respuesta = otro_client.get(f"/api/v1/envios/{envio_ajeno.id}/")
 
     assert respuesta.status_code == 404, "la dirección de otra clienta no puede ser legible"
 
@@ -59,7 +59,7 @@ def test_un_intruso_no_puede_leer_el_envio_de_otro(otro_client, envio_ajeno):
 @pytest.mark.django_db
 def test_un_intruso_no_puede_editar_el_envio_de_otro(otro_client, envio_ajeno):
     respuesta = otro_client.patch(
-        f"/api/envios/{envio_ajeno.id}/", {"direccion": "Mi casa 123"}, format="json"
+        f"/api/v1/envios/{envio_ajeno.id}/", {"direccion": "Mi casa 123"}, format="json"
     )
 
     assert respuesta.status_code == 404
@@ -69,7 +69,7 @@ def test_un_intruso_no_puede_editar_el_envio_de_otro(otro_client, envio_ajeno):
 
 @pytest.mark.django_db
 def test_un_intruso_no_puede_borrar_el_envio_de_otro(otro_client, envio_ajeno):
-    respuesta = otro_client.delete(f"/api/envios/{envio_ajeno.id}/")
+    respuesta = otro_client.delete(f"/api/v1/envios/{envio_ajeno.id}/")
 
     assert respuesta.status_code == 404
     assert Envio.objects.filter(pk=envio_ajeno.pk).exists()
@@ -77,7 +77,7 @@ def test_un_intruso_no_puede_borrar_el_envio_de_otro(otro_client, envio_ajeno):
 
 @pytest.mark.django_db
 def test_el_listado_de_envios_solo_muestra_los_propios(otro_client, envio_ajeno):
-    respuesta = otro_client.get("/api/envios/")
+    respuesta = otro_client.get("/api/v1/envios/")
 
     assert respuesta.status_code == 200
     assert respuesta.data["count"] == 0, "el listado no puede filtrar los envíos ajenos"
@@ -89,7 +89,7 @@ def test_el_listado_de_envios_solo_muestra_los_propios(otro_client, envio_ajeno)
 
 @pytest.mark.django_db
 def test_el_listado_de_pagos_solo_muestra_los_propios(otro_client, pago_ajeno):
-    respuesta = otro_client.get("/api/pagos/")
+    respuesta = otro_client.get("/api/v1/pagos/")
 
     assert respuesta.status_code == 200
     assert respuesta.data["count"] == 0
@@ -99,7 +99,7 @@ def test_el_listado_de_pagos_solo_muestra_los_propios(otro_client, pago_ajeno):
 def test_no_se_puede_registrar_un_pago_a_nombre_de_otro(otro_client, usuario, orden_ajena):
     """`usuario` iba en el cuerpo y el serializer lo aceptaba tal cual."""
     respuesta = otro_client.post(
-        "/api/pagos/",
+        "/api/v1/pagos/",
         {
             "usuario": usuario.id,
             "orden": orden_ajena.id,
@@ -118,7 +118,7 @@ def test_no_se_puede_registrar_un_pago_a_nombre_de_otro(otro_client, usuario, or
 def test_el_estado_del_pago_no_se_puede_fijar_desde_la_peticion(auth_client, usuario, orden_ajena):
     """Un cliente no declara que ya pagó: eso lo dice la pasarela."""
     respuesta = auth_client.post(
-        "/api/pagos/",
+        "/api/v1/pagos/",
         {"orden": orden_ajena.id, "monto": "15000.00", "metodo": "webpay", "estado": "pagado"},
         format="json",
     )
@@ -133,7 +133,7 @@ def test_el_estado_del_pago_no_se_puede_fijar_desde_la_peticion(auth_client, usu
 
 @pytest.mark.django_db
 def test_cualquiera_puede_ver_el_catalogo(api_client, producto):
-    respuesta = api_client.get("/api/productos/productos/")
+    respuesta = api_client.get("/api/v1/productos/")
 
     assert respuesta.status_code == 200
 
@@ -141,7 +141,7 @@ def test_cualquiera_puede_ver_el_catalogo(api_client, producto):
 @pytest.mark.django_db
 def test_un_cliente_no_puede_crear_productos(auth_client):
     respuesta = auth_client.post(
-        "/api/productos/productos/create/",
+        "/api/v1/productos/crear/",
         {"nombre": "Gratis", "descripcion": "x", "precio": "1.00", "stock": 99},
         format="json",
     )
@@ -152,7 +152,7 @@ def test_un_cliente_no_puede_crear_productos(auth_client):
 @pytest.mark.django_db
 def test_un_cliente_no_puede_cambiar_el_precio_de_un_producto(auth_client, producto):
     respuesta = auth_client.patch(
-        f"/api/productos/productos/{producto.id}/partial-update/",
+        f"/api/v1/productos/{producto.id}/editar-parcial/",
         {"precio": "1.00"},
         format="json",
     )
@@ -164,7 +164,7 @@ def test_un_cliente_no_puede_cambiar_el_precio_de_un_producto(auth_client, produ
 
 @pytest.mark.django_db
 def test_un_cliente_no_puede_borrar_un_producto(auth_client, producto):
-    respuesta = auth_client.delete(f"/api/productos/productos/{producto.id}/delete/")
+    respuesta = auth_client.delete(f"/api/v1/productos/{producto.id}/eliminar/")
 
     assert respuesta.status_code == 403
 
@@ -172,7 +172,7 @@ def test_un_cliente_no_puede_borrar_un_producto(auth_client, producto):
 @pytest.mark.django_db
 def test_la_duena_de_la_tienda_si_administra_el_catalogo(admin_client_api, producto):
     respuesta = admin_client_api.patch(
-        f"/api/productos/productos/{producto.id}/partial-update/",
+        f"/api/v1/productos/{producto.id}/editar-parcial/",
         {"precio": "4500.00"},
         format="json",
     )
@@ -188,7 +188,7 @@ def test_la_duena_de_la_tienda_si_administra_el_catalogo(admin_client_api, produ
 @pytest.mark.django_db
 def test_no_se_puede_publicar_una_resena_suplantando_a_otro(otro_client, usuario, producto):
     respuesta = otro_client.post(
-        "/api/reviews/",
+        "/api/v1/reviews/",
         {
             "producto": producto.id,
             "usuario": usuario.id,
@@ -210,7 +210,7 @@ def test_un_intruso_no_puede_borrar_la_resena_de_otro(otro_client, usuario, prod
         producto=producto, usuario=usuario, comentario="Excelente", calificacion=5
     )
 
-    respuesta = otro_client.delete(f"/api/reviews/{review.id}/")
+    respuesta = otro_client.delete(f"/api/v1/reviews/{review.id}/")
 
     assert respuesta.status_code == 403
     assert Review.objects.filter(pk=review.pk).exists()
@@ -222,7 +222,7 @@ def test_un_intruso_no_puede_borrar_la_resena_de_otro(otro_client, usuario, prod
 @pytest.mark.django_db
 def test_un_cliente_no_puede_crearse_cupones(auth_client):
     respuesta = auth_client.post(
-        "/api/descuentos/",
+        "/api/v1/descuentos/",
         {
             "nombre": "AUTOREGALO",
             "tipo": "porcentaje",
@@ -240,7 +240,7 @@ def test_un_cliente_no_puede_crearse_cupones(auth_client):
 @pytest.mark.django_db
 def test_la_duena_de_la_tienda_si_puede_crear_cupones(admin_client_api):
     respuesta = admin_client_api.post(
-        "/api/descuentos/",
+        "/api/v1/descuentos/",
         {
             "nombre": "VERANO",
             "tipo": "porcentaje",
@@ -261,21 +261,21 @@ def test_la_duena_de_la_tienda_si_puede_crear_cupones(admin_client_api):
 
 @pytest.mark.django_db
 def test_un_anonimo_no_puede_listar_los_eventos_de_analitica(api_client):
-    respuesta = api_client.get("/api/analytics/")
+    respuesta = api_client.get("/api/v1/analytics/")
 
     assert respuesta.status_code in (401, 403)
 
 
 @pytest.mark.django_db
 def test_un_cliente_no_puede_leer_la_analitica_de_la_tienda(auth_client):
-    respuesta = auth_client.get("/api/analytics/")
+    respuesta = auth_client.get("/api/v1/analytics/")
 
     assert respuesta.status_code == 403
 
 
 @pytest.mark.django_db
 def test_la_duena_de_la_tienda_si_lee_la_analitica(admin_client_api):
-    respuesta = admin_client_api.get("/api/analytics/")
+    respuesta = admin_client_api.get("/api/v1/analytics/")
 
     assert respuesta.status_code == 200
 
@@ -289,7 +289,7 @@ def test_un_intruso_no_ve_las_notificaciones_de_otro(otro_client, usuario):
         usuario=usuario, tipo="email", asunto="Tu orden #1", mensaje="Va en camino"
     )
 
-    respuesta = otro_client.get("/api/notificaciones/")
+    respuesta = otro_client.get("/api/v1/notificaciones/")
 
     assert respuesta.status_code == 200
     assert respuesta.data["count"] == 0
@@ -300,7 +300,7 @@ def test_un_intruso_no_ve_las_notificaciones_de_otro(otro_client, usuario):
 
 @pytest.mark.django_db
 def test_un_intruso_no_puede_ver_la_orden_de_otro(otro_client, orden_ajena):
-    respuesta = otro_client.get(f"/api/orden/ordenes/{orden_ajena.id}/")
+    respuesta = otro_client.get(f"/api/v1/ordenes/{orden_ajena.id}/")
 
     assert respuesta.status_code == 404
 
@@ -308,7 +308,7 @@ def test_un_intruso_no_puede_ver_la_orden_de_otro(otro_client, orden_ajena):
 @pytest.mark.django_db
 def test_los_endpoints_privados_rechazan_al_anonimo(api_client):
     """Sin token no se entra a ninguna parte del área privada."""
-    rutas = ["/api/carrito/carrito/", "/api/orden/ordenes/", "/api/envios/", "/api/pagos/"]
+    rutas = ["/api/v1/carrito/", "/api/v1/ordenes/", "/api/v1/envios/", "/api/v1/pagos/"]
 
     codigos = [api_client.get(ruta).status_code for ruta in rutas]
 
@@ -322,7 +322,7 @@ def test_los_endpoints_privados_rechazan_al_anonimo(api_client):
 def test_el_registro_rechaza_contrasenas_debiles(api_client):
     """Los AUTH_PASSWORD_VALIDATORS no se aplicaban: DRF no los llama solo."""
     respuesta = api_client.post(
-        "/api/auth/register/",
+        "/api/v1/auth/register/",
         {
             "username": "nuevo",
             "email": "nuevo@ejemplo.com",
@@ -338,7 +338,7 @@ def test_el_registro_rechaza_contrasenas_debiles(api_client):
 @pytest.mark.django_db
 def test_el_registro_acepta_una_contrasena_fuerte(api_client):
     respuesta = api_client.post(
-        "/api/auth/register/",
+        "/api/v1/auth/register/",
         {
             "username": "nuevo",
             "email": "nuevo@ejemplo.com",

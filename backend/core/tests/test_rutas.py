@@ -1,4 +1,4 @@
-"""Tests de las rutas: la v1 nueva, el healthcheck y la convivencia con la v0."""
+"""Tests de las rutas: la v1, el healthcheck y la retirada definitiva de la v0."""
 
 from decimal import Decimal
 
@@ -117,12 +117,30 @@ def test_v1_auth(api_client):
     assert "access" in respuesta.data["token"]
 
 
-# ------------------------------------------------------------------ convivencia
+# ------------------------------------------------------------------ retirada v0
 
 
 @pytest.mark.django_db
-def test_las_rutas_viejas_siguen_funcionando(auth_client, producto):
-    """Strangler-fig: el frontend actual no se rompe mientras se migra."""
-    assert auth_client.get("/api/productos/productos/").status_code == 200
-    assert auth_client.get("/api/carrito/carrito/").status_code == 200
-    assert auth_client.get("/api/orden/ordenes/").status_code == 200
+@pytest.mark.parametrize(
+    "ruta_v0",
+    [
+        "/api/productos/productos/",
+        "/api/carrito/carrito/",
+        "/api/carrito/carrito/add/",
+        "/api/orden/ordenes/",
+        "/api/pagos/",
+        "/api/envios/",
+        "/api/reviews/",
+        "/api/descuentos/",
+        "/api/analytics/",
+        "/api/notificaciones/",
+        "/api/auth/token/",
+    ],
+)
+def test_las_rutas_v0_ya_no_existen(auth_client, producto, ruta_v0):
+    """El strangler-fig terminó: el frontend está en v1 y la v0 se retiró.
+
+    Este test es la contraparte del que comprobaba su convivencia. Si alguien
+    vuelve a colgar una app fuera de `/api/v1/`, aquí se entera.
+    """
+    assert auth_client.get(ruta_v0).status_code == 404
