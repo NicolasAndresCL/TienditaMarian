@@ -231,13 +231,13 @@ source env/bin/activate
 ```
 
 ```bash
-pytest                            # 135 tests (config en pyproject.toml, settings de test)
+pytest                            # 148 tests (config en pyproject.toml, settings de test)
 pytest --cov                      # con reporte de cobertura
 ruff check .                      # lint (E, F, I, UP, B, DJ, C4, T20)
 python manage.py check --deploy   # hardening de producción
 ```
 
-Sobre SQLite pasan 134 y se salta 1: el de concurrencia del checkout.
+Sobre SQLite pasan 147 y se salta 1: el de concurrencia del checkout.
 
 El CI exige **90 %** de cobertura (`--cov-fail-under=90`); la real es 91,8 %.
 

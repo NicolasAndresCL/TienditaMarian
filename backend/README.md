@@ -141,7 +141,7 @@ refresh rota, y el `logout` lo invalida de verdad (blacklist).
 ## Tests
 
 ```bash
-pytest                            # 135 tests · 92 % de cobertura
+pytest                            # 148 tests · 92 % de cobertura
 pytest --cov                      # con cobertura
 ruff check .                      # lint
 python manage.py check --deploy   # hardening de producción
