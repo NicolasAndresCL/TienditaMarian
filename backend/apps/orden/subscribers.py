@@ -77,8 +77,45 @@ def crear_envio_pendiente(orden: Orden) -> None:
     )
 
 
+def enviar_correo_pago(orden: Orden) -> None:
+    """Confirma el cobro.
+
+    `ORDEN_PAGADA` se emitía al vacío: el evento existía, `PagoService` lo
+    anunciaba y no había nadie suscrito. Una compra pagada no le decía nada a la
+    clienta.
+    """
+    destinatario = orden.usuario.email
+    if not destinatario:
+        logger.info("La orden %s no tiene correo de destino; no se notifica el pago.", orden.pk)
+        return
+
+    send_mail(
+        subject="Confirmamos tu pago",
+        message=(
+            f"Hola {orden.usuario.username}, recibimos el pago de tu orden #{orden.id} "
+            f"por ${orden.total}. La estamos preparando."
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[destinatario],
+    )
+    logger.info("Correo de pago enviado para la orden %s", orden.pk)
+
+
+def notificar_pago(orden: Orden) -> None:
+    Notificacion.objects.create(
+        usuario=orden.usuario,
+        tipo="email",
+        asunto="Pago recibido",
+        mensaje=f"El pago de la orden #{orden.id} fue confirmado.",
+        enviada=False,
+    )
+
+
 def registrar_suscriptores() -> None:
     """Conecta los efectos. Se llama una vez, desde `OrdenConfig.ready()`."""
     despachador.suscribir(Evento.ORDEN_CREADA, enviar_correo_confirmacion)
     despachador.suscribir(Evento.ORDEN_CREADA, crear_notificacion)
     despachador.suscribir(Evento.ORDEN_CREADA, crear_envio_pendiente)
+
+    despachador.suscribir(Evento.ORDEN_PAGADA, enviar_correo_pago)
+    despachador.suscribir(Evento.ORDEN_PAGADA, notificar_pago)

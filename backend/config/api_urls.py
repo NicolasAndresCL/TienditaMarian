@@ -16,6 +16,7 @@ test_rutas.py::test_las_rutas_v0_ya_no_existen` verifica que no vuelvan.
     /api/v1/checkout/             POST
     /api/v1/ordenes/              GET
     /api/v1/ordenes/<pk>/         GET
+    /api/v1/ordenes/<pk>/pagar/   POST
     /api/v1/envios/               GET · POST
     /api/v1/pagos/                GET · POST
     /api/v1/reviews/              GET (público) · POST
@@ -37,6 +38,7 @@ from apps.carrito.views import (
 )
 from apps.envios.views import EnvioDetailView, EnvioListCreateView
 from apps.orden.views import OrdenDetailView, OrdenListView
+from apps.pagos.views import PagarOrdenView
 from apps.productos.views.producto_views import (
     ProductoCreateView,
     ProductoDeleteView,
@@ -72,6 +74,9 @@ carrito_patterns = [
 ordenes_patterns = [
     path("", OrdenListView.as_view(), name="ordenes-list"),
     path("<int:pk>/", OrdenDetailView.as_view(), name="ordenes-detail"),
+    # Cuelga de la orden y no de /pagos/ porque lo que se pide es "cobrá ESTA
+    # orden": el pago es el efecto, no el recurso que se identifica.
+    path("<int:pk>/pagar/", PagarOrdenView.as_view(), name="ordenes-pagar"),
 ]
 
 envios_patterns = [
