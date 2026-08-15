@@ -9,33 +9,32 @@ armado a mano.
 Con eso desaparecen los 500 que producían `data['producto_id']` (KeyError si el
 campo no venía) e `int(request.data.get('cantidad'))` (ValueError si venía
 "abc").
+
+La validación del cuerpo la hace el serializer declarado, no la vista leyendo
+`request.data.get(...)`: hasta ahora el `serializer_class` estaba puesto pero
+nunca se invocaba, así que solo decoraba el esquema de OpenAPI mientras el
+servicio reparseaba a mano lo mismo que el serializer ya declaraba.
 """
 
+from typing import Any
+
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema, extend_schema_view
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.carrito.serializers import CarritoSerializer, ItemCarritoSerializer
+from apps.carrito.serializers import (
+    ActualizarCantidadSerializer,
+    AgregarItemSerializer,
+    CarritoSerializer,
+    CheckoutSerializer,
+    ItemCarritoSerializer,
+    QuitarItemSerializer,
+)
 from apps.carrito.services import CarritoService, CheckoutService
 from apps.orden.serializers import OrdenSerializer
-
-
-class AgregarItemSerializer(serializers.Serializer):
-    """Documenta y valida la forma del cuerpo de la petición."""
-
-    producto_id = serializers.IntegerField()
-    cantidad = serializers.IntegerField(required=False, default=1, min_value=1)
-
-
-class QuitarItemSerializer(serializers.Serializer):
-    producto_id = serializers.IntegerField()
-
-
-class CheckoutSerializer(serializers.Serializer):
-    cupon = serializers.CharField(required=False, allow_blank=True)
 
 
 class CarritoBaseView(GenericAPIView):
@@ -44,6 +43,18 @@ class CarritoBaseView(GenericAPIView):
     @property
     def servicio(self) -> CarritoService:
         return CarritoService(self.request.user)
+
+    def datos_validados(self) -> dict[str, Any]:
+        """Valida el cuerpo con el serializer de la vista y lo devuelve limpio.
+
+        `raise_exception=True` deja que el ValidationError llegue a
+        `core.api.exception_handler`, que ya lo envuelve en el mismo formato
+        `{error: {codigo, mensaje, detalle}}` que los errores de dominio: el
+        frontend no necesita distinguir de dónde viene el fallo.
+        """
+        serializer = self.get_serializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
 
 
 @extend_schema_view(
@@ -58,7 +69,9 @@ class CarritoDetailView(CarritoBaseView):
     serializer_class = CarritoSerializer
 
     def get(self, request: Request) -> Response:
-        return Response(self.get_serializer(self.servicio.carrito).data)
+        # `carrito_para_mostrar()` y no `carrito`: trae ítems y productos en el
+        # mismo viaje, que es lo que evita el N+1 al serializar.
+        return Response(self.get_serializer(self.servicio.carrito_para_mostrar()).data)
 
 
 @extend_schema_view(
@@ -69,6 +82,7 @@ class CarritoDetailView(CarritoBaseView):
         request=AgregarItemSerializer,
         responses={
             200: ItemCarritoSerializer,
+            400: OpenApiResponse(description="Cuerpo inválido: falta `producto_id` o la cantidad no es un entero ≥ 1."),
             404: OpenApiResponse(description="El producto no existe."),
             409: OpenApiResponse(description="Stock insuficiente."),
         },
@@ -79,9 +93,8 @@ class AddItemCarritoView(CarritoBaseView):
     serializer_class = AgregarItemSerializer
 
     def post(self, request: Request) -> Response:
-        item = self.servicio.agregar(
-            request.data.get("producto_id"), request.data.get("cantidad", 1)
-        )
+        datos = self.datos_validados()
+        item = self.servicio.agregar(datos["producto_id"], datos["cantidad"])
         return Response(ItemCarritoSerializer(item).data, status=status.HTTP_200_OK)
 
 
@@ -93,6 +106,7 @@ class AddItemCarritoView(CarritoBaseView):
         request=QuitarItemSerializer,
         responses={
             204: OpenApiResponse(description="Producto eliminado."),
+            400: OpenApiResponse(description="Falta `producto_id` o no es un entero."),
             404: OpenApiResponse(description="No está en tu carrito."),
         },
     )
@@ -101,7 +115,7 @@ class RemoveItemCarritoView(CarritoBaseView):
     serializer_class = QuitarItemSerializer
 
     def delete(self, request: Request) -> Response:
-        self.servicio.quitar(request.data.get("producto_id"))
+        self.servicio.quitar(self.datos_validados()["producto_id"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -110,21 +124,24 @@ class RemoveItemCarritoView(CarritoBaseView):
         operation_id="carrito.updateCantidad",
         tags=["Carrito"],
         summary="Actualizar la cantidad de un producto",
-        request=AgregarItemSerializer,
+        request=ActualizarCantidadSerializer,
         responses={
             200: ItemCarritoSerializer,
-            400: OpenApiResponse(description="Cantidad inválida."),
+            400: OpenApiResponse(description="Falta `producto_id` o `cantidad`, o la cantidad no es un entero ≥ 1."),
+            404: OpenApiResponse(description="Ese producto no está en tu carrito."),
             409: OpenApiResponse(description="Stock insuficiente."),
         },
     )
 )
 class UpdateCantidadCarritoView(CarritoBaseView):
-    serializer_class = AgregarItemSerializer
+    # Serializer propio, no el de agregar: aquí `cantidad` es obligatoria. Con el
+    # `default=1` del otro, un PATCH sin cantidad dejaba el ítem en 1 unidad en
+    # silencio en vez de rechazar la petición.
+    serializer_class = ActualizarCantidadSerializer
 
     def patch(self, request: Request) -> Response:
-        item = self.servicio.actualizar_cantidad(
-            request.data.get("producto_id"), request.data.get("cantidad")
-        )
+        datos = self.datos_validados()
+        item = self.servicio.actualizar_cantidad(datos["producto_id"], datos["cantidad"])
         return Response(ItemCarritoSerializer(item).data)
 
 
@@ -162,10 +179,17 @@ class ClearCarritoView(CarritoBaseView):
     )
 )
 class CheckoutView(CarritoBaseView):
+    # `serializer_class` describe la RESPUESTA (la orden creada), así que aquí el
+    # cuerpo se valida con `CheckoutSerializer` explícitamente en vez de con
+    # `datos_validados()`, que usaría el de la respuesta.
     serializer_class = OrdenSerializer
 
     def post(self, request: Request) -> Response:
-        cupon = request.data.get("cupon") or None
+        entrada = CheckoutSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+
+        # Un cupón vacío es "sin cupón", no un cupón llamado "".
+        cupon = entrada.validated_data.get("cupon") or None
         orden = CheckoutService(request.user).ejecutar(cupon=cupon)
 
         return Response(self.get_serializer(orden).data, status=status.HTTP_201_CREATED)
