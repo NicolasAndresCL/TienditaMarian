@@ -104,6 +104,18 @@ transacción — si algo falla, se revierte entero:
 Los efectos del paso 7 son suscriptores desacoplados (`core/events.py`): si el
 servidor de correo está caído, la venta ya ocurrió y queda registrada igual.
 
+### El cobro
+
+`POST /api/v1/ordenes/<id>/pagar/` delega en `PagoService`, que bloquea la fila
+de la orden, cobra con la pasarela configurada, registra el `Pago`, marca la
+orden y emite `ORDEN_PAGADA` (correo de confirmación + notificación). Es
+**idempotente**: reintentarlo sobre una orden ya pagada devuelve 409
+`orden_ya_pagada`, nunca un segundo cobro.
+
+Hoy la pasarela es `PagoManual` —la transferencia que la tienda confirma—, pero
+`PasarelaPago` es una interfaz: añadir Webpay es escribir una subclase, sin que
+el checkout ni las órdenes se enteren.
+
 **Defensa en profundidad del inventario:** `select_for_update` protege desde la
 aplicación y un `CheckConstraint` de `stock >= 0` protege desde la base. Esa
 última barrera no puede saltársela ningún código.
@@ -122,6 +134,7 @@ aplicación y un `CheckConstraint` de `stock >= 0` protege desde la base. Esa
 | `DELETE` | `/api/v1/carrito/items/quitar/` · `/carrito/vaciar/` | sesión |
 | `POST` | `/api/v1/checkout/` | sesión |
 | `GET` | `/api/v1/ordenes/` · `/<id>/` | dueño |
+| `POST` | `/api/v1/ordenes/<id>/pagar/` | dueño |
 | `GET` `POST` | `/api/v1/envios/` · `/api/v1/pagos/` | dueño |
 | `GET` | `/api/v1/reviews/` | público |
 | `POST` `PATCH` `DELETE` | `/api/v1/reviews/…` | autor |
@@ -156,7 +169,7 @@ mirar el token para saber si hay sesión: lo pregunta.
 ## Tests
 
 ```bash
-pytest                            # 166 tests · 92 % de cobertura
+pytest                            # 173 tests · 92 % de cobertura
 pytest --cov                      # con cobertura
 ruff check .                      # lint
 python manage.py check --deploy   # hardening de producción
