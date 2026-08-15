@@ -131,3 +131,14 @@ export async function obtenerOrden(id) {
   const { data } = await api.get(`/ordenes/${id}/`);
   return data;
 }
+
+/** Cobra una orden y devuelve la orden ya pagada.
+ *
+ * El backend hace el cobro completo: bloquea la fila, registra el pago, marca la
+ * orden y avisa por correo. Es idempotente — pagar dos veces devuelve un 409 con
+ * el código `orden_ya_pagada`, nunca un segundo cobro.
+ */
+export async function pagarOrden(id) {
+  const { data } = await api.post(`/ordenes/${id}/pagar/`, {});
+  return data;
+}
