@@ -49,7 +49,13 @@ EXPOSE 80
 
 # En Docker un proceso no-root puede escuchar en el puerto 80 porque el daemon
 # fija net.ipv4.ip_unprivileged_port_start=0 por defecto en el contenedor.
+# 127.0.0.1 y no `localhost`: dentro del contenedor, `localhost` resuelve primero
+# a ::1, y nginx con `listen 80;` solo abre el socket IPv4. El wget de BusyBox no
+# reintenta con IPv4 —curl sí, por eso el healthcheck del backend nunca dio
+# problemas—, así que este daba "Connection refused" en cada corrida y el
+# contenedor vivía marcado `unhealthy` mientras servía la SPA perfectamente. Con
+# `depends_on: condition: service_healthy` delante, eso bloquea un despliegue.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD wget -q --spider http://localhost/ || exit 1
+    CMD wget -q --spider http://127.0.0.1/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
