@@ -70,6 +70,51 @@ def test_eliminar_producto_deja_entrada_delete(producto):
 
 
 @pytest.mark.django_db
+def test_la_orden_se_audita_con_el_detalle_de_lo_vendido(usuario, producto):
+    """Auditar una orden es registrar QUÉ se vendió, no solo cuánto se cobró.
+
+    `model_to_dict` solo trae los campos propios de la fila, así que la orden
+    quedaba como un total suelto. `ItemOrden` estaba en la lista blanca para
+    cubrir ese hueco, pero el checkout los crea con `bulk_create`, que no dispara
+    señales: no se auditaba ni uno.
+    """
+    from apps.orden.models import ItemOrden, Orden
+
+    orden = Orden.objects.create(usuario=usuario, total=Decimal("6000.00"))
+    ItemOrden.objects.bulk_create(
+        [ItemOrden(orden=orden, producto=producto, cantidad=2, precio=producto.precio)]
+    )
+
+    # Un cambio posterior (aquí, marcarla pagada) es cuando el detalle importa.
+    orden.pagado = True
+    orden.save(update_fields=["pagado"])
+
+    log = (
+        AuditLog.objects.filter(model_name="Orden", object_id=str(orden.pk), action="update")
+        .order_by("-id")
+        .first()
+    )
+
+    assert log is not None
+    assert log.changes["items"] == [
+        {"producto": str(producto), "cantidad": 2, "precio": str(producto.precio)}
+    ]
+
+
+@pytest.mark.django_db
+def test_los_items_de_orden_ya_no_prometen_auditoria(usuario, producto):
+    """`bulk_create` no dispara señales: tenerlos en la lista blanca mentía.
+
+    No se pierde trazabilidad porque un ItemOrden es inmutable —nace con su
+    precio congelado y no se toca nunca más—, así que la tabla es su propio
+    registro histórico.
+    """
+    from apps.auditlog.signals import MODELOS_AUDITADOS
+
+    assert "orden.ItemOrden" not in MODELOS_AUDITADOS
+
+
+@pytest.mark.django_db
 def test_una_auditoria_caida_no_tumba_la_operacion(monkeypatch, producto):
     """La capa de auditoría nunca lanza: no puede hacer caer una venta (skill §2.2)."""
     from apps.auditlog import utils

@@ -27,6 +27,33 @@ def _es_sensible(campo: str) -> bool:
     return any(marca in campo.lower() for marca in CAMPOS_SENSIBLES)
 
 
+def _lineas_de_detalle(instance: models.Model) -> list[dict[str, Any]] | None:
+    """Ítems de una instancia que los tenga (una orden, un carrito), o None.
+
+    `model_to_dict` solo devuelve los campos propios de la fila, así que una
+    `Orden` se auditaba como un total suelto: quedaba registrado *cuánto* se
+    cobró, pero no *qué* se vendió. Aquí se añade esa mitad.
+
+    Se detecta por convención (`related_name='items'`) en vez de enumerar
+    modelos, para que `auditlog` no tenga que conocer las apps de negocio: la
+    dependencia va en un solo sentido.
+    """
+    manager = getattr(instance, "items", None)
+    if manager is None or not hasattr(manager, "all"):
+        return None
+
+    return [
+        {
+            "producto": str(item.producto),
+            "cantidad": item.cantidad,
+            # El precio unitario solo existe en los ítems de una orden (en los del
+            # carrito el precio vive en el producto y puede cambiar).
+            "precio": str(getattr(item, "precio", "")) or None,
+        }
+        for item in manager.all()
+    ]
+
+
 def serializar_instancia(instance: models.Model) -> dict[str, Any]:
     """Convierte una instancia en un dict apto para un JSONField.
 
@@ -40,6 +67,14 @@ def serializar_instancia(instance: models.Model) -> dict[str, Any]:
         for campo, valor in model_to_dict(instance).items()
         if not _es_sensible(campo)
     }
+
+    # Ojo con el momento: en la entrada de creación de una orden esta lista sale
+    # vacía, porque el `post_save` de la orden se dispara ANTES de que el
+    # checkout cree sus ítems (los necesita para existir). El detalle aparece en
+    # cualquier auditoría posterior —el pago, un cambio de estado—, que es
+    # justamente cuando importa saber qué contenía la orden que se tocó.
+    if (lineas := _lineas_de_detalle(instance)) is not None:
+        datos["items"] = lineas
     # Ida y vuelta por JSON: normaliza FileField, Decimal, date y cualquier otro
     # tipo que el JSONField rechazaría, y falla aquí —donde sí lo capturamos—
     # en vez de al escribir en la base.

@@ -20,10 +20,18 @@ logger = logging.getLogger(__name__)
 
 # Modelos de negocio cuya trazabilidad importa: qué se vendió, a qué precio, a
 # dónde se envió y quién lo tocó.
+#
+# `orden.ItemOrden` estuvo en esta lista y era una promesa que no se cumplía: el
+# checkout los crea con `bulk_create`, que **no dispara señales**, así que no se
+# auditaba ni uno. Sacarlo no pierde nada, por dos razones:
+#
+#   - un ItemOrden es **inmutable**: se crea con su precio congelado y no se
+#     modifica nunca más, así que la propia tabla es su registro histórico;
+#   - lo que sí puede cambiar —la orden a la que pertenece— sí se audita, y su
+#     JSON ahora incluye el detalle de los ítems (ver `auditlog/utils.py`).
 MODELOS_AUDITADOS: tuple[str, ...] = (
     "productos.Producto",
     "orden.Orden",
-    "orden.ItemOrden",
     "pagos.Pago",
     "envios.Envio",
     "descuentos.Descuento",
