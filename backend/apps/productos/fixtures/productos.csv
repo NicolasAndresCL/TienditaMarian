@@ -1,4 +1,12 @@
 nombre,descripcion,precio,stock,image
-Cubo Didastico Instrumento Musical,Jueguetes,5000.00,1,CuboDidasticoInstrumentos.jpg
-Dinosaurio con su Huvito,Jueguetes,2000.00,1,DinosaurioHuevito.jpg
-Telefono Fisher Price,Jueguetes,3000,1,TelefonoFisherPrice.jpg
+Cubo Didáctico de Instrumentos Musicales,Cubo de madera con instrumentos para descubrir sonidos y formas.,5000.00,5,CuboDidacticoInstrumentos.jpg
+Dinosaurio con su Huevito,Dinosaurio de peluche suave con su huevito. Ideal para los más chiquitos.,2000.00,3,DinosaurioHuevito.jpg
+Teléfono Fisher Price,El clásico teléfono de arrastre con ruedas y carita. Un imperdible.,3000.00,4,TelefonoFisherPrice.jpg
+Carrito Didáctico,Carrito de encaje con bloques de colores para aprender jugando.,3000.00,6,CarritoDidactico.jpg
+Muñeca de Trapo,"Muñeca de trapo hecha a mano, suave y abrazable.",9990.00,2,MuñecaTrapo.jpeg
+Peter Rabbit,Peluche de Peter Rabbit con su chaquetita azul.,7500.00,3,PeterRabbit.jpeg
+Perro Chocolo,"El perro Chocolo de peluche, para cantar y jugar.",6500.00,4,PerroChocolo.jpeg
+Carterita Sirena,Carterita con lentejuelas reversibles de sirena.,4500.00,5,CarteritaSirena.jpeg
+Tablet de Peppa,Tablet de juguete con luces y sonidos de Peppa.,8000.00,3,TabletPepa.jpg
+Bugs Bunny,Peluche clásico de Bugs Bunny.,6000.00,2,BugsBunny.jpeg
+Randall,"Peluche de Randall, de Monsters Inc.",7000.00,2,Randall.jpeg

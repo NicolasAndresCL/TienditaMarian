@@ -4,8 +4,6 @@
   {% load static %}
     <meta charset="UTF-8">
     <title>Documentación API</title>
-    <!-- Logo   --> 
-    <a class="link" href="#"><img src="{% static 'swagger/logo.jfif' %}" alt="Logo"><span>Documentación API</span></a>
 
     <!-- CSS base de Swagger -->
     <link rel="stylesheet" href="{% static 'drf_spectacular_sidecar/swagger-ui-dist/swagger-ui.css' %}">
@@ -14,6 +12,20 @@
     <link rel="stylesheet" href="{% static 'swagger/swagger-custom.css' %}">
 </head>
 <body>
+{% comment %}
+El archivo se llama `Logo.jfif` con L mayúscula. Aquí decía `logo.jfif`: en
+Windows funcionaba porque el sistema de archivos ignora las mayúsculas, pero
+dentro del contenedor (Linux + CompressedManifestStaticFilesStorage, que exige
+que la entrada exista en el manifiesto) esta página devolvía HTTP 500 entero:
+`ValueError: Missing staticfiles manifest entry for 'swagger/logo.jfif'`.
+El bloque además colgaba del <head>, donde un <a> no es HTML válido.
+
+Ojo: el comentario va con {% templatetag openblock %} comment {% templatetag closeblock %}
+y no con llave-almohadilla, que en Django es de UNA sola línea y renderiza el
+resto como texto visible en la página.
+{% endcomment %}
+<a class="link" href="/"><img src="{% static 'swagger/Logo.jfif' %}" alt="Logo"><span>Documentación API</span></a>
+
 <div id="swagger-ui"></div>
 
 <!-- Scripts base de Swagger -->
