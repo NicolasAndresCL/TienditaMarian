@@ -51,12 +51,12 @@ está en **[`pasos.md`](pasos.md)**.
 |---|---|---|
 | Stack | Django 5.2 · DRF · SimpleJWT · PostgreSQL | React 19 · Vite 7 · Tailwind 4 |
 | Arranque | `python manage.py runserver` | `npm run dev` |
-| Tests | `pytest` (148, 92 % de cobertura) | `npm test` (12) |
+| Tests | `pytest` (150, 92 % de cobertura) | `npm test` (12) |
 | Lint | `ruff check .` | `npm run lint` |
 | Detalle | [`backend/README.md`](backend/README.md) | `frontend/package.json` |
 
-Sobre SQLite pasan 147 y se salta el de concurrencia del checkout, que necesita
-PostgreSQL: `docker compose --profile test run --rm tests` corre los 148.
+Sobre SQLite pasan 149 y se salta el de concurrencia del checkout, que necesita
+PostgreSQL: `docker compose --profile test run --rm tests` corre los 150.
 
 El backend documenta su arquitectura por capas (`core/`, `services`, `selectors`),
 la decisión de diseño **ADR-001** (`GenericAPIView` + mixins sobre ViewSets) y el
