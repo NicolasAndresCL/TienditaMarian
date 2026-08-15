@@ -50,7 +50,9 @@ jobs:
       - name: Tests + cobertura
         # --cov-fail-under convierte la cobertura en condición de fallo,
         # no en una métrica decorativa que se imprime y se ignora.
-        run: pytest --cov --cov-report=term-missing --cov-fail-under=70
+        # El umbral es 90 y la cobertura real 91,8 %: con el 70 anterior se podía
+        # borrar un tercio de la suite sin que el CI se enterara.
+        run: pytest --cov --cov-report=term-missing --cov-fail-under=90
 
   # ---------------------------------------------------------------------------
   # Backend contra PostgreSQL real: SQLite ignora `select_for_update` en
@@ -171,3 +173,46 @@ jobs:
 
       - name: Build (vite)
         run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Humo del stack real: construye las dos imágenes, levanta el compose y usa la
+  # aplicación. Es el último de la cascada porque es el más caro, y solo corre si
+  # los jobs baratos pasaron.
+  #
+  # Existe porque los otros cuatro jobs estuvieron en verde sobre una aplicación
+  # que no abría: hay una clase entera de fallos —rutas de estáticos sensibles a
+  # mayúsculas, /media/ sin servir con DEBUG=False, healthchecks que mienten— que
+  # solo se manifiesta al construir el artefacto y arrancarlo. Un pipeline que
+  # linta y testea pero nunca ejecuta lo que se despliega da seguridad falsa.
+  # ---------------------------------------------------------------------------
+  docker-smoke:
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend]
+    # Las variables van a nivel de JOB, no de step: el .env de la raíz no se
+    # versiona y `docker compose` reinterpola el YAML en CADA invocación, así que
+    # `ps`, `exec`, `logs` y `down` fallarían con "required variable SECRET_KEY is
+    # missing" si solo las tuviera el step que levanta el stack.
+    # La clave es efímera, no sirve tráfico y muere con el job.
+    env:
+      SECRET_KEY: ci-clave-efimera-solo-para-el-humo-no-sirve-trafico
+      POSTGRES_PORT: '5432'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Levantar el stack
+        run: docker compose up --build -d
+
+      - name: Humo
+        # Se invoca con `bash` y no como `./scripts/smoke.sh` a propósito: el bit
+        # de ejecución está puesto en el índice de git, pero un checkout hecho en
+        # Windows puede perderlo y el job moriría con "Permission denied" por algo
+        # que no tiene nada que ver con la aplicación.
+        run: bash scripts/smoke.sh
+
+      - name: Logs si algo falló
+        if: failure()
+        run: docker compose logs --tail 80
+
+      - name: Apagar
+        if: always()
+        run: docker compose down -v

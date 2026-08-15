@@ -77,7 +77,9 @@ pipeline {
                     sh 'python -m pip install --upgrade pip'
                     sh 'pip install -r requirements/dev.txt'
                     // Cobertura como condición de fallo, no métrica decorativa.
-                    sh 'pytest --cov --cov-report=term-missing --cov-fail-under=70'
+                    // 90 frente a una cobertura real del 91,8 %: el 70 anterior
+                    // dejaba margen para borrar un tercio de la suite sin ruido.
+                    sh 'pytest --cov --cov-report=term-missing --cov-fail-under=90'
                 }
             }
         }
