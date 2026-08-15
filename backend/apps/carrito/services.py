@@ -22,7 +22,7 @@ from decimal import Decimal
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.db import transaction
-from django.db.models import F
+from django.db.models import Case, F, PositiveIntegerField, When
 
 from apps.carrito.models import Carrito, ItemCarrito
 from apps.orden.models import ItemOrden, Orden
@@ -75,11 +75,32 @@ class CarritoService:
 
     def __init__(self, usuario: AbstractBaseUser) -> None:
         self.usuario = usuario
+        self._carrito: Carrito | None = None
 
     @property
     def carrito(self) -> Carrito:
-        carrito, _ = Carrito.objects.get_or_create(usuario=self.usuario)
-        return carrito
+        """El carrito de la usuaria, creándolo si aún no existe.
+
+        Se cachea en la instancia: era una property que iba a la base en CADA
+        acceso, así que leerla dos veces en el mismo flujo costaba dos consultas
+        para devolver la misma fila.
+        """
+        if self._carrito is None:
+            self._carrito, _ = Carrito.objects.get_or_create(usuario=self.usuario)
+        return self._carrito
+
+    def carrito_para_mostrar(self) -> Carrito:
+        """El carrito con sus ítems y productos ya cargados.
+
+        `GET /carrito/` hacía 4+2N consultas: una por el carrito, otra por los
+        ítems, una por el producto de cada ítem, y luego `get_total` recorría
+        `items.all()` OTRA vez, repitiendo el paseo entero. Con el prefetch, la
+        segunda iteración reutiliza la caché del queryset y el total sale sin
+        tocar la base.
+        """
+        return (
+            Carrito.objects.prefetch_related("items__producto").get(pk=self.carrito.pk)
+        )
 
     def _buscar_producto(self, producto_id: object) -> Producto:
         if producto_id is None:
@@ -245,11 +266,20 @@ class CheckoutService:
 
         Se usa `F()` para que la resta la calcule la base de datos sobre el valor
         real de la fila, y no sobre el que leyó Python hace unos milisegundos.
+
+        Un único UPDATE con `CASE` en vez de uno por ítem: antes era un bucle de N
+        consultas dentro de la transacción del checkout, que es justo donde más
+        caro sale cada viaje (las filas están bloqueadas y todo el mundo espera).
         """
-        for item in items:
-            Producto.objects.filter(pk=item.producto_id).update(
-                stock=F("stock") - item.cantidad
+        Producto.objects.filter(pk__in=[item.producto_id for item in items]).update(
+            stock=Case(
+                *[
+                    When(pk=item.producto_id, then=F("stock") - item.cantidad)
+                    for item in items
+                ],
+                output_field=PositiveIntegerField(),
             )
+        )
 
     def _vaciar_carrito(self) -> None:
         ItemCarrito.objects.filter(carrito__usuario=self.usuario).delete()
