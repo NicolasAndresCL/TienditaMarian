@@ -1,14 +1,31 @@
 @import "tailwindcss";
 
+/*
+ * Estilos base de la tienda.
+ *
+ * Lo que había aquí era, en su mayoría, el CSS que Vite deja al crear el
+ * proyecto (`a { color: #646cff }`, `button { background-color: #f9f9f9 }`,
+ * `body { display: flex; place-items: center }`, el bloque de
+ * `prefers-color-scheme`...). No es inofensivo: ese CSS va SIN capa, y en
+ * Tailwind 4 las utilidades viven en `@layer utilities`, así que el CSS sin capa
+ * SIEMPRE gana. En la práctica el template pisaba la marca de la tienda:
+ *
+ *   - los enlaces salían azul violeta en vez de `text-pink-700`;
+ *   - los botones salían grises en vez de `bg-pink-400`;
+ *   - `body { display: flex; place-items: center }` encogía #root al ancho de su
+ *     contenido, así que la tienda entera quedaba arrinconada a la izquierda en
+ *     vez de ocupar la página.
+ *
+ * Queda solo lo propio de la Tiendita: el fondo y la tipografía del título.
+ */
 
 :root {
   font-family: Arial, Helvetica, sans-serif;
   line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  /* background-color: #A47DAB; */
+  /* La paleta es pastel clara: sin `dark`, para que el navegador no repinte los
+     controles de formulario en oscuro y arruine el contraste. */
+  color-scheme: light;
+  color: #213547;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -16,63 +33,24 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
   background-image: url('/CieloPastel2.jpg');
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
   background-color: #fef3f7; /* pastel rosa de fallback */
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  color: var(--color-purple-800);
-  font-family: cursive;  
-}
-
-/* button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-} */
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+/* La tipografía cursiva de los títulos es de la marca y se conserva, pero va en
+   `@layer base` para que las utilidades de Tailwind puedan pisarla. El tamaño y
+   el color los decide cada componente (`text-3xl text-pink-700`…): antes esta
+   regla iba suelta y los ganaba a todos. */
+@layer base {
+  h1 {
+    font-family: cursive;
   }
 }
