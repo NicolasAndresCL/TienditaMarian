@@ -1,16 +1,20 @@
 """Rutas raíz del proyecto.
 
-La API vive bajo `/api/v1/` (ver `config/api_urls.py`). Las rutas anteriores se
-mantienen en paralelo mientras se migra el frontend —strangler-fig, skill §3: la
-versión vieja sigue operativa hasta alcanzar paridad— y se eliminarán en cuanto
-`Frontend-Tiendita` apunte a v1.
+Toda la API vive bajo `/api/v1/` (ver `config/api_urls.py`).
+
+Las rutas de la v0 —que repetían el nombre de la app dentro de su propio prefijo
+(`/api/productos/productos/`, `/api/carrito/carrito/add/`)— se mantuvieron en
+paralelo mientras el frontend migraba (strangler-fig, skill §3) y **ya se
+eliminaron**: `frontend/src/api/client.js` apunta a `/api/v1` desde su baseURL, y
+no queda ningún consumidor de las viejas.
 """
 
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.shortcuts import render
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
 from apps.productos.views.home_view import home
@@ -33,22 +37,6 @@ urlpatterns = [
     # API v1 — rutas limpias y versionadas.
     path('api/v1/', include('config.api_urls')),
 
-    # ------------------------------------------------------------------
-    # DEPRECADAS — rutas de la v0. Repetían el nombre de la app dentro de su
-    # propio prefijo (/api/productos/productos/, /api/carrito/carrito/add/).
-    # Siguen vivas solo para no romper el frontend actual; se borran al migrarlo.
-    # ------------------------------------------------------------------
-    path('api/productos/', include('apps.productos.urls')),
-    path('api/carrito/', include('apps.carrito.urls')),
-    path('api/orden/', include('apps.orden.urls')),
-    path('api/pagos/', include('apps.pagos.urls')),
-    path('api/envios/', include('apps.envios.urls')),
-    path('api/notificaciones/', include('apps.notificaciones.urls')),
-    path('api/descuentos/', include('apps.descuentos.urls')),
-    path('api/reviews/', include('apps.reviews.urls')),
-    path('api/analytics/', include('apps.analytics.urls')),
-    path('api/auth/', include('apps.auth_api.urls')),
-
     # Documentación OpenAPI.
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', custom_swagger_ui_view, name='swagger-ui'),
@@ -58,3 +46,13 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+elif settings.SERVE_MEDIA:
+    # `static()` devuelve una lista vacía cuando DEBUG=False, y WhiteNoise sirve
+    # los estáticos pero no el media subido: por eso las fotos del catálogo daban
+    # 404 en la imagen de producción. Aquí se publica la ruta a propósito, para
+    # el compose local y las demos.
+    # En un despliegue real esto va en False y el media lo sirve nginx o un CDN:
+    # `serve` es síncrono y no está pensado para tráfico serio.
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]

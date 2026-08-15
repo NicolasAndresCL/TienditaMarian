@@ -1,11 +1,12 @@
-"""Rutas de la API v1.
+"""Rutas de la API v1 — el único espacio de la API.
 
 Las rutas anteriores repetían el nombre de la app dentro de su propio prefijo
 (`/api/productos/productos/`, `/api/carrito/carrito/add/`), y la vitrina HTML
 colgaba de `/api/productos/`, dentro del espacio de la API.
 
-Aquí quedan limpias y versionadas. Las viejas siguen respondiendo mientras se
-migra el frontend (strangler-fig, skill §3): nada se rompe de golpe.
+Aquí quedan limpias y versionadas. Las viejas convivieron con estas mientras el
+frontend migraba (strangler-fig, skill §3) y ya se retiraron: `core/tests/
+test_rutas.py::test_las_rutas_v0_ya_no_existen` verifica que no vuelvan.
 
     /api/v1/productos/            GET (público) · POST (staff)
     /api/v1/productos/<pk>/       GET (público) · PUT/PATCH/DELETE (staff)

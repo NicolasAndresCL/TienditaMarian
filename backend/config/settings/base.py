@@ -117,6 +117,13 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Django sirve /media/ por su cuenta solo con DEBUG=True, y WhiteNoise sirve los
+# estáticos pero NO el media subido: con DEBUG=False las fotos del catálogo daban
+# 404 sin que nada lo avisara. Esta bandera publica la ruta explícitamente (ver
+# config/urls.py) para el compose local y las demos.
+# En un despliegue real va en False: el media se sirve por nginx o un CDN.
+SERVE_MEDIA = env.bool("SERVE_MEDIA", default=False)
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -172,10 +179,10 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SORT_OPERATIONS": True,
-    # Deja en el esquema solo /api/v1/. Sin esto, las rutas v0 deprecadas
-    # (strangler-fig) colisionan en operationId con sus equivalentes v1 y generan
-    # ~46 warnings W001 que hacen fallar `check --deploy --fail-level WARNING`.
-    "PREPROCESSING_HOOKS": ["core.api.spectacular_hooks.excluir_rutas_legacy"],
+    # Hubo aquí un PREPROCESSING_HOOK que excluía del esquema las rutas v0: al
+    # compartir vista con sus equivalentes v1 duplicaban el operationId y
+    # generaban ~46 warnings W001 que hacían fallar `check --deploy
+    # --fail-level WARNING`. Borradas las v0, el hook sobraba.
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
