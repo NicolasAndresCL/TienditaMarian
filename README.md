@@ -9,7 +9,8 @@ TienditaMarian/
 ├── backend/      API REST — Django 5.2 + DRF + JWT + PostgreSQL
 ├── frontend/     SPA — React 19 + Vite 7 + Tailwind 4
 ├── docker-compose.yml     Orquesta backend + frontend + PostgreSQL + MailHog
-├── .github/workflows/     CI unificado (backend + frontend)
+├── .github/workflows/     CI unificado (backend + frontend + humo del stack)
+├── scripts/smoke.sh       humo del stack levantado (lo usa el CI y se corre en local)
 ├── Jenkinsfile            Pipeline equivalente para Jenkins
 ├── pasos.md               Runbook: cómo levantarlo en local y en la web
 └── docs/hosting-y-dominio.md   Dónde alojar web, base de datos y dominio
@@ -78,9 +79,24 @@ flujo del checkout transaccional en su propio README.
 
 ## CI
 
-`.github/workflows/ci.yml` corre en cada push/PR: lint + tests del backend
-(SQLite y PostgreSQL), `check --deploy` de hardening, y lint + tests + build del
-frontend. `Jenkinsfile` espeja el mismo pipeline.
+`.github/workflows/ci.yml` corre en cada push/PR, de lo más barato a lo más caro:
+
+| Job | Qué verifica |
+|---|---|
+| `backend-test` | `ruff` + la suite sobre SQLite, con **90 %** de cobertura como condición de fallo |
+| `backend-postgres` | la misma suite contra PostgreSQL real, donde `select_for_update` sí bloquea |
+| `backend-deploy-check` | `check --deploy --fail-level WARNING` contra la config de producción |
+| `frontend` | `eslint`, `vitest` y que el bundle **construya** |
+| `docker-smoke` | construye las dos imágenes, **levanta el stack y lo usa** |
+
+El último existe porque los otros cuatro llegaron a estar en verde sobre una
+aplicación que no abría: hay fallos —rutas de estáticos sensibles a mayúsculas,
+`/media/` sin servir con `DEBUG=False`, healthchecks que mienten— que solo
+aparecen al construir el artefacto y arrancarlo. Corre
+[`scripts/smoke.sh`](scripts/smoke.sh), que también se puede ejecutar en local
+contra un `docker compose up` para reproducir el pipeline entero.
+
+`Jenkinsfile` espeja el mismo pipeline.
 
 ---
 

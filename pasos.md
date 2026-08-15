@@ -239,6 +239,25 @@ python manage.py check --deploy   # hardening de producción
 
 Sobre SQLite pasan 134 y se salta 1: el de concurrencia del checkout.
 
+El CI exige **90 %** de cobertura (`--cov-fail-under=90`); la real es 91,8 %.
+
+### Humo del stack completo
+
+Hay una clase de fallos que ningún test unitario ve, porque solo existe en la
+frontera entre el código y su entorno: una ruta de estático sensible a
+mayúsculas, `/media/` sin servir con `DEBUG=False`, un healthcheck que miente.
+Para eso está `scripts/smoke.sh`, que usa la aplicación ya levantada:
+
+```bash
+docker compose up --build -d
+bash scripts/smoke.sh
+```
+
+Comprueba que los tres servicios llegan a *healthy*, siembra el catálogo, y
+verifica la API, el Swagger UI, las fotos del catálogo, la SPA y su fallback de
+router, más que las rutas v0 sigan en 404. Es el mismo script que corre el job
+`docker-smoke` del CI, así que se puede reproducir el pipeline entero en local.
+
 `check --deploy` solo reporta las advertencias de seguridad (HSTS, cookies
 seguras, SSL redirect, etc.) que están configuradas en
 `config/settings/prod.py`. Corriéndolo con la config de `dev` (la que carga
@@ -402,6 +421,7 @@ archivos estáticos o CDN (Netlify, Vercel, S3+CloudFront, nginx propio, etc.).
 | Tests backend | `pytest` |
 | Tests backend con cobertura | `pytest --cov` |
 | Test de concurrencia (real, con Postgres) | `docker compose --profile test run --rm tests` |
+| Humo del stack levantado | `bash scripts/smoke.sh` |
 | Sembrar el catálogo demo (Docker) | `docker compose exec backend python manage.py cargar_productos` |
 | Lint backend | `ruff check .` |
 | Hardening de producción | `DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py check --deploy` |
