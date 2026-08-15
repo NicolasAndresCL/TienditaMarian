@@ -48,6 +48,8 @@ memory.md
 CLAUDE.md
 # Registro local de trabajo abierto: nombra rutas y debilidades del entorno.
 pendientes.md
+# Chuleta de arranque local (rutas y puertos de esta máquina).
+levanta-facil.md
 
 # --- Artefactos de QA con navegador (Playwright MCP) ---
 .playwright-mcp/
