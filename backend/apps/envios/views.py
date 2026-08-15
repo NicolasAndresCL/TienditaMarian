@@ -13,8 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from apps.envios.models import Envio
 from apps.envios.serializers import EnvioSerializer
-from core.api.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView, PorDuenoMixin
-from core.api.permissions import EsDuenoOAdmin
+from core.api.base_views import BaseDetalleDelDueno, BaseListCreateView, PorDuenoMixin
 
 
 @extend_schema_view(
@@ -49,7 +48,8 @@ class EnvioListCreateView(PorDuenoMixin, BaseListCreateView):
     ),
     delete=extend_schema(summary="Eliminar envío", tags=["Envíos"], operation_id="eliminarEnvio"),
 )
-class EnvioDetailView(PorDuenoMixin, BaseRetrieveUpdateDestroyView):
+class EnvioDetailView(BaseDetalleDelDueno):
+    # La base ya trae `PorDuenoMixin` + `EsDuenoOAdmin`: las dos mitades de la
+    # autorización, que aquí venían declaradas a mano.
     queryset = Envio.objects.select_related("orden", "usuario")
     serializer_class = EnvioSerializer
-    permission_classes = [IsAuthenticated, EsDuenoOAdmin]

@@ -27,8 +27,11 @@ from typing import Any
 from django.db.models import QuerySet
 from rest_framework import mixins
 from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from core.api.permissions import EsDuenoOAdmin
 
 
 class BaseListCreateView(mixins.ListModelMixin, mixins.CreateModelMixin, GenericAPIView):
@@ -88,3 +91,26 @@ class PorDuenoMixin:
 
     def perform_create(self, serializer) -> None:
         serializer.save(**{self.campo_dueno: self.request.user})
+
+
+class BaseDetalleDelDueno(PorDuenoMixin, BaseRetrieveUpdateDestroyView):
+    """Detalle de un recurso que pertenece a alguien: las DOS mitades juntas.
+
+    `PorDuenoMixin` y `EsDuenoOAdmin` van siempre en pareja, y quedarse con una
+    sola deja el agujero que la otra tapaba: sin el mixin, el listado sigue
+    mostrando lo ajeno; sin el permiso, basta adivinar un id para leer —o
+    borrar— el envío de otra clienta, con su dirección incluida.
+
+    Hoy las vistas de detalle lo aplican bien, pero eso depende de que quien
+    escriba la próxima se acuerde de las dos. Heredando de aquí no hay nada que
+    recordar: la regla la impone el código y no un párrafo de un documento.
+
+        class EnvioDetailView(BaseDetalleDelDueno):
+            queryset = Envio.objects.select_related("usuario")
+            serializer_class = EnvioSerializer
+
+    Si el dueño se llama distinto de `usuario`, se declara `campo_dueno` en la
+    vista: lo leen tanto el mixin como el permiso.
+    """
+
+    permission_classes = [IsAuthenticated, EsDuenoOAdmin]

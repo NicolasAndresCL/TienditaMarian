@@ -9,8 +9,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from apps.notificaciones.models import Notificacion
 from apps.notificaciones.serializers import NotificacionSerializer
-from core.api.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView, PorDuenoMixin
-from core.api.permissions import EsDuenoOAdmin
+from core.api.base_views import BaseDetalleDelDueno, BaseListCreateView, PorDuenoMixin
 
 
 @extend_schema_view(
@@ -61,7 +60,7 @@ class NotificacionListCreateView(PorDuenoMixin, BaseListCreateView):
         operation_id="eliminarNotificacion",
     ),
 )
-class NotificacionDetailView(PorDuenoMixin, BaseRetrieveUpdateDestroyView):
+class NotificacionDetailView(BaseDetalleDelDueno):
+    # La base ya trae `PorDuenoMixin` + `EsDuenoOAdmin`.
     queryset = Notificacion.objects.select_related("usuario")
     serializer_class = NotificacionSerializer
-    permission_classes = [IsAuthenticated, EsDuenoOAdmin]

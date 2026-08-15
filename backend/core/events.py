@@ -54,9 +54,6 @@ class Despachador:
         if callback in self._suscriptores[evento]:
             self._suscriptores[evento].remove(callback)
 
-    def suscriptores(self, evento: Evento) -> list[Callback]:
-        return list(self._suscriptores[evento])
-
     def emitir(self, evento: Evento, *args: Any, **kwargs: Any) -> list[Exception]:
         """Notifica a todos los suscriptores. Nunca lanza.
 
