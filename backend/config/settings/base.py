@@ -128,8 +128,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Acepta la sesión por cookie httpOnly (el navegador) y por cabecera Bearer
+    # (Swagger y clientes de API). Ver core/api/authentication.py.
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "core.api.authentication.JWTCookieAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -198,6 +200,45 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS", default=["http://localhost:5173", "http://127.0.0.1:5173"]
 )
+# La sesión viaja en cookies, y el navegador no las manda a otro origen salvo que
+# el servidor lo autorice explícitamente. Sin esto, el frontend de :5173 no
+# recibiría la cookie del backend de :8000 ni la reenviaría.
+CORS_ALLOW_CREDENTIALS = True
+
+# ---------------------------------------------------------------- sesión JWT
+#
+# Los tokens viajan en cookies HttpOnly: el JavaScript de la página no puede
+# leerlos, así que un XSS ya no se lleva la sesión. Ver
+# `core/api/authentication.py` para la contrapartida (CSRF).
+JWT_COOKIE_ACCESS = "tiendita_access"
+JWT_COOKIE_REFRESH = "tiendita_refresh"
+
+# `Secure` exige HTTPS. En desarrollo va en False porque localhost es http; en
+# producción tiene que ser True o la cookie viaja en claro.
+JWT_COOKIE_SECURE = env.bool("JWT_COOKIE_SECURE", default=not DEBUG)
+
+# `Lax` basta mientras el frontend y la API compartan sitio registrable
+# (localhost:5173 → localhost:8000, o tienditademarian.com → api.tienditademarian.com):
+# el puerto y el subdominio no cambian el "sitio" a efectos de cookies. Si algún
+# día el frontend vive en OTRO dominio (Netlify, Vercel), hará falta
+# `None` + `Secure`, que a su vez exige HTTPS en ambos extremos.
+JWT_COOKIE_SAMESITE = env("JWT_COOKIE_SAMESITE", default="Lax")
+
+# El refresh solo se manda a las rutas que lo necesitan: así no viaja en cada
+# petición al catálogo, reduciendo su exposición.
+JWT_COOKIE_REFRESH_PATH = "/api/v1/auth/"
+
+# El frontend lee esta cookie (NO httpOnly, a propósito) para poner la cabecera
+# `X-CSRFToken`; es el mecanismo estándar de Django.
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
+
+# Django rechaza una petición que escribe si su cabecera `Origin` no coincide con
+# el host ni está en esta lista. El frontend vive en otro puerto (:5173 → :8000),
+# así que sin esto toda escritura moriría con "Origin checking failed" en cuanto
+# la sesión pasó a viajar en cookies. Por defecto, los mismos orígenes que ya
+# están autorizados para CORS: son el mismo frontend.
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=CORS_ALLOWED_ORIGINS)
 
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = env("EMAIL_HOST", default="localhost")

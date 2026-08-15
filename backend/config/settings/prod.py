@@ -36,4 +36,9 @@ SECURE_HSTS_PRELOAD = SECURE_HTTPS
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])  # noqa: F405
+# CSRF_TRUSTED_ORIGINS lo define `base.py`, leyendo la misma variable de entorno
+# pero con un default útil: los orígenes ya autorizados para CORS, que son el
+# frontend. Aquí estaba repetido con `default=[]`, y esa lista vacía dejaba sin
+# poder escribir a cualquier despliegue que no la definiera a mano — desde que la
+# sesión viaja en cookies, Django rechaza toda escritura cuyo `Origin` no esté
+# en la lista.

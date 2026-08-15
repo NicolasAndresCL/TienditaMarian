@@ -2,7 +2,10 @@
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import mixins, permissions, status
 from rest_framework.generics import GenericAPIView
@@ -13,6 +16,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from apps.auth_api.cookies import poner_sesion, quitar_sesion
 from apps.auth_api.serializers import CustomTokenObtainPairSerializer, RegisterSerializer
 
 logger = logging.getLogger(__name__)
@@ -49,6 +53,23 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
 
+    # `ensure_csrf_cookie`: la respuesta del login planta el token CSRF que el
+    # frontend necesita para las peticiones que escriben. Sin esto, la primera
+    # compra tras iniciar sesión fallaría con un 403 de CSRF.
+    @method_decorator(ensure_csrf_cookie)
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        respuesta = super().post(request, *args, **kwargs)
+
+        if respuesta.status_code == status.HTTP_200_OK:
+            refresh = respuesta.data.pop("refresh")
+            # El `access` se conserva en el cuerpo para el Swagger y los clientes
+            # de API; el `refresh` —el de siete días, el que de verdad hay que
+            # proteger— sale SOLO en una cookie httpOnly y nunca es visible al
+            # JavaScript. El frontend no guarda ninguno de los dos.
+            poner_sesion(respuesta, access=respuesta.data["access"], refresh=refresh)
+
+        return respuesta
+
 
 @extend_schema_view(
     post=extend_schema(
@@ -66,6 +87,26 @@ class CustomTokenRefreshView(TokenRefreshView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        # El refresh llega por cookie (navegador) o en el cuerpo (clientes de
+        # API). La cookie no se puede leer desde JavaScript, así que el frontend
+        # no tiene forma de mandarlo en el cuerpo aunque quisiera.
+        if not request.data.get("refresh"):
+            desde_cookie = request.COOKIES.get(settings.JWT_COOKIE_REFRESH)
+            if desde_cookie:
+                request.data["refresh"] = desde_cookie
+
+        respuesta = super().post(request, *args, **kwargs)
+
+        if respuesta.status_code == status.HTTP_200_OK:
+            # Con ROTATE_REFRESH_TOKENS el servidor emite uno nuevo: hay que
+            # reescribir la cookie o el siguiente refresh usaría el ya
+            # invalidado por la blacklist.
+            nuevo_refresh = respuesta.data.pop("refresh", None)
+            poner_sesion(respuesta, access=respuesta.data["access"], refresh=nuevo_refresh)
+
+        return respuesta
 
 
 @extend_schema_view(
@@ -103,6 +144,9 @@ class RegisterAPIView(mixins.CreateModelMixin, GenericAPIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
 
+    # Igual que el login: el registro deja la sesión iniciada, así que tiene que
+    # dejar también el token CSRF o la primera compra moriría con un 403.
+    @method_decorator(ensure_csrf_cookie)
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -114,13 +158,51 @@ class RegisterAPIView(mixins.CreateModelMixin, GenericAPIView):
         refresh = RefreshToken.for_user(usuario)
         logger.info("Usuario registrado: %s", usuario.username)
 
-        return Response(
+        respuesta = Response(
             {
                 "message": "Usuario creado exitosamente.",
                 "usuario": {"username": usuario.username, "email": usuario.email},
-                "token": {"access": str(refresh.access_token), "refresh": str(refresh)},
+                # Igual que en el login: el access sigue en el cuerpo para los
+                # clientes de API, el refresh solo en la cookie httpOnly.
+                "token": {"access": str(refresh.access_token)},
             },
             status=status.HTTP_201_CREATED,
+        )
+
+        return poner_sesion(respuesta, access=str(refresh.access_token), refresh=str(refresh))
+
+
+@extend_schema_view(
+    get=extend_schema(
+        operation_id="auth.me",
+        tags=["Autenticación"],
+        summary="Quién soy",
+        description=(
+            "Datos del usuario de la sesión actual. Con la sesión en una cookie "
+            "httpOnly, el frontend no puede inspeccionar el token para saber si "
+            "hay sesión ni de quién es: lo pregunta aquí al arrancar."
+        ),
+        responses={
+            200: OpenApiResponse(description="Sesión activa."),
+            401: OpenApiResponse(description="Sin sesión."),
+        },
+    )
+)
+class MeAPIView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = None
+
+    # El frontend llama aquí al arrancar, así que es el sitio natural para
+    # plantar el token CSRF: garantiza que esté disponible antes de la primera
+    # petición que escriba, venga la usuaria de donde venga.
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request: Request) -> Response:
+        return Response(
+            {
+                "username": request.user.username,
+                "email": request.user.email,
+                "es_staff": request.user.is_staff,
+            }
         )
 
 
@@ -146,7 +228,10 @@ class LogoutAPIView(GenericAPIView):
     serializer_class = None
 
     def post(self, request: Request) -> Response:
-        token_refresh = request.data.get("refresh")
+        token_refresh = request.data.get("refresh") or request.COOKIES.get(
+            settings.JWT_COOKIE_REFRESH
+        )
+
         if not token_refresh:
             return Response(
                 {"error": {"codigo": "refresh_requerido", "mensaje": "Falta el refresh token.", "detalle": {}}},
@@ -156,12 +241,16 @@ class LogoutAPIView(GenericAPIView):
         try:
             RefreshToken(token_refresh).blacklist()
         except TokenError:
-            # Token ya vencido o ya invalidado: el resultado buscado (sesión
-            # cerrada) igualmente se cumple, pero se avisa que venía mal.
-            return Response(
-                {"error": {"codigo": "token_invalido", "mensaje": "El token no es válido.", "detalle": {}}},
-                status=status.HTTP_400_BAD_REQUEST,
+            # Token ya vencido o ya invalidado: la sesión del navegador se cierra
+            # igual —las cookies se borran abajo—, pero se avisa que venía mal.
+            return quitar_sesion(
+                Response(
+                    {"error": {"codigo": "token_invalido", "mensaje": "El token no es válido.", "detalle": {}}},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             )
 
         logger.info("Sesión cerrada: %s", request.user.username)
-        return Response(status=status.HTTP_205_RESET_CONTENT)
+        # Sin borrar las cookies, el navegador seguiría mandando un access válido
+        # durante sus 15 minutos de vida aunque el refresh ya esté en la blacklist.
+        return quitar_sesion(Response(status=status.HTTP_205_RESET_CONTENT))
