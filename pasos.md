@@ -241,6 +241,25 @@ Sobre SQLite pasan 187 y se salta 1: el de concurrencia del checkout.
 
 El CI exige **90 %** de cobertura (`--cov-fail-under=90`); la real es 91,8 %.
 
+### Antes de pushear: reproducir el CI
+
+```bash
+./scripts/verificar.sh              # todo
+./scripts/verificar.sh backend      # solo backend
+```
+
+Corre lo mismo que el pipeline: `ruff`, la suite con el 90 % de cobertura
+exigido, el `check --deploy --fail-level WARNING` **contra la configuración de
+producción**, y el lint + tests + build del frontend.
+
+Existe porque hubo tres corridas seguidas en rojo por warnings de
+drf-spectacular. En local todo "pasaba" —`pytest` y `ruff` en verde— porque el
+único job que fallaba era justamente el que nadie ejecutaba a mano. Un paso
+obligatorio que hay que acordarse de hacer no es obligatorio: es un
+recordatorio.
+
+No cubre el job `docker-smoke`; para eso, lo de abajo.
+
 ### Humo del stack completo
 
 Hay una clase de fallos que ningún test unitario ve, porque solo existe en la
@@ -422,6 +441,7 @@ archivos estáticos o CDN (Netlify, Vercel, S3+CloudFront, nginx propio, etc.).
 | Tests backend con cobertura | `pytest --cov` |
 | Test de concurrencia (real, con Postgres) | `docker compose --profile test run --rm tests` |
 | Humo del stack levantado | `bash scripts/smoke.sh` |
+| **Reproducir el CI antes de pushear** | `bash scripts/verificar.sh` |
 | Sembrar el catálogo demo (Docker) | `docker compose exec backend python manage.py cargar_productos` |
 | Lint backend | `ruff check .` |
 | Hardening de producción | `DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py check --deploy` |

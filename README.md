@@ -11,6 +11,7 @@ TienditaMarian/
 ├── docker-compose.yml     Orquesta backend + frontend + PostgreSQL + MailHog
 ├── .github/workflows/     CI unificado (backend + frontend + humo del stack)
 ├── scripts/smoke.sh       humo del stack levantado (lo usa el CI y se corre en local)
+├── scripts/verificar.sh   reproduce el CI en local, antes de pushear
 ├── Jenkinsfile            Pipeline equivalente para Jenkins
 ├── pasos.md               Runbook: cómo levantarlo en local y en la web
 └── docs/hosting-y-dominio.md   Dónde alojar web, base de datos y dominio
@@ -95,6 +96,11 @@ aplicación que no abría: hay fallos —rutas de estáticos sensibles a mayúsc
 aparecen al construir el artefacto y arrancarlo. Corre
 [`scripts/smoke.sh`](scripts/smoke.sh), que también se puede ejecutar en local
 contra un `docker compose up` para reproducir el pipeline entero.
+
+**Antes de pushear**: [`scripts/verificar.sh`](scripts/verificar.sh) reproduce en
+local los cuatro primeros jobs. Existe porque hubo tres corridas en rojo por
+warnings de drf-spectacular mientras `pytest` y `ruff` estaban en verde: el
+único job que fallaba era el que no se ejecutaba a mano.
 
 `Jenkinsfile` espeja el mismo pipeline.
 
