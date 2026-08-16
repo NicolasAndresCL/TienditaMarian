@@ -67,9 +67,26 @@ def _respuesta_de_dominio(exc: TienditaError, context: dict[str, Any]) -> Respon
     )
 
 
+def _codigo_de_error_drf(exc: Exception) -> str:
+    """El código REAL de la excepción, no el de su clase.
+
+    `default_code` es un atributo de clase: `AuthenticationFailed` siempre
+    contesta `authentication_failed` con él, aunque se haya construido con un
+    código propio (`raise AuthenticationFailed(msg, "no_active_account")`). El
+    código específico vive en `exc.detail`, que DRF envuelve en un `ErrorDetail`
+    que lo lleva encima.
+
+    Importa porque `codigo` es el identificador estable que consume el frontend
+    —el mensaje en español puede cambiar, el código no—, y usar el de la clase
+    fusionaba en uno solo casos que el backend sí distinguía.
+    """
+    codigo_real = getattr(getattr(exc, "detail", None), "code", None)
+    return codigo_real or getattr(exc, "default_code", None) or "error_peticion"
+
+
 def _normalizar_respuesta_drf(respuesta: Response, exc: Exception) -> Response:
     """Envuelve los errores propios de DRF en el mismo formato que los de dominio."""
-    codigo = getattr(exc, "default_code", None) or "error_peticion"
+    codigo = _codigo_de_error_drf(exc)
     datos = respuesta.data
 
     if isinstance(datos, dict) and "detail" in datos:

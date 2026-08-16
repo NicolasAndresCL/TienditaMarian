@@ -267,3 +267,28 @@ def test_tras_el_logout_el_refresh_ya_no_sirve(api_client, usuario):
         "/api/v1/auth/token/refresh/", {"refresh": refresh}, format="json"
     )
     assert respuesta.status_code == 401
+
+
+@pytest.mark.django_db
+def test_un_refresh_cuyo_usuario_fue_borrado_responde_401_y_no_404(api_client, usuario):
+    """Preguntar "¿sigo autenticada?" nunca se contesta con "no existe el recurso".
+
+    SimpleJWT busca al dueño del token con un `.get()` sin proteger: solo prevé
+    que la cuenta esté inactiva, no que haya desaparecido. El `DoesNotExist` se
+    escapaba hasta el handler global, que lo traducía a `404 no_encontrado`.
+
+    Pasa de verdad: cada `docker compose down -v` recrea la base mientras el
+    navegador conserva su cookie de refresh.
+    """
+    _login(api_client, usuario)
+    refresh = api_client.cookies[settings.JWT_COOKIE_REFRESH].value
+
+    usuario.delete()
+
+    respuesta = api_client.post(
+        "/api/v1/auth/token/refresh/", {"refresh": refresh}, format="json"
+    )
+
+    assert respuesta.status_code == 401
+    # El contrato de error del proyecto se mantiene: mismo sobre para todos.
+    assert respuesta.data["error"]["codigo"] == "no_active_account"

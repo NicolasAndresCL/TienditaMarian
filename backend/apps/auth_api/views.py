@@ -17,7 +17,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.auth_api.cookies import poner_sesion, quitar_sesion
-from apps.auth_api.serializers import CustomTokenObtainPairSerializer, RegisterSerializer
+from apps.auth_api.serializers import (
+    CustomTokenObtainPairSerializer,
+    CustomTokenRefreshSerializer,
+    RegisterSerializer,
+)
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -84,6 +88,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     )
 )
 class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
