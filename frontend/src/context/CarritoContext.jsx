@@ -34,7 +34,19 @@ export function CarritoProvider({ children }) {
   }, [autenticado]);
 
   // Al entrar (o al cerrar sesión) el carrito se sincroniza con el servidor.
+  //
+  // `react-hooks@7` estrenó `set-state-in-effect`, y aquí marca `refrescar()`:
+  // su primer tramo es sincrónico (`setCargando(true)`, o `setCarrito(null)` si
+  // no hay sesión), así que dispara un render extra antes de pintar. La regla
+  // tiene razón en lo que ve, pero esto es justo el caso que React documenta
+  // como uso legítimo de un efecto: traer datos de un sistema externo al montar.
+  //
+  // Se desactiva en esta línea y no en la configuración: si aparece en otro
+  // efecto, quiero volver a verlo. La alternativa —diferir la llamada a un
+  // microtask— pasa el linter sin cambiar nada de lo que ocurre en tiempo de
+  // ejecución; sería esconder el aviso, no atenderlo.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refrescar();
   }, [refrescar]);
 

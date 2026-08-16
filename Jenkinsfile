@@ -117,7 +117,7 @@ pipeline {
         // -------------------------------------------------------------------
         stage('Frontend Build+Test') {
             agent {
-                docker { image 'node:20-slim'; reuseNode true }
+                docker { image 'node:24-slim'; reuseNode true }
             }
             steps {
                 dir('frontend') {
