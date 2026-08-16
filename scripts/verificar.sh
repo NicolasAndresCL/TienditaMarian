@@ -14,7 +14,7 @@
 #   ./scripts/verificar.sh            # todo
 #   ./scripts/verificar.sh backend    # solo backend
 #   ./scripts/verificar.sh frontend   # solo frontend
-#   ./scripts/verificar.sh entorno    # el frontend DENTRO de node:20, como el CI
+#   ./scripts/verificar.sh entorno    # el frontend DENTRO de node:24, como el CI
 #
 # El modo `entorno` existe por un segundo fallo, distinto del anterior: la suite
 # del frontend pasaba aquí y fallaba en el pipeline porque `frontend/.env` está
@@ -68,16 +68,29 @@ if [ "$QUE" = "todo" ] || [ "$QUE" = "backend" ]; then
     # Este es el que se saltaba. Corre contra la config de PRODUCCIÓN, con una
     # clave efímera: `check --deploy` rechaza claves débiles y fallaría por la
     # clave en vez de por el hardening real.
-    (
-      export DJANGO_SETTINGS_MODULE=config.settings.prod
-      export ALLOWED_HOSTS=tienditademarian.com
-      export DATABASE_URL=sqlite:///db.sqlite3
-      export SECURE_HTTPS=True
-      SECRET_KEY="$("$PY" -c 'import secrets; print(secrets.token_urlsafe(64))')"
-      export SECRET_KEY
-      ejecutar "check --deploy --fail-level WARNING" \
-        "$PY" manage.py check --deploy --fail-level WARNING
-    ) || fallos=$((fallos + 1))
+    #
+    # Las variables van por `env` y NO en una subshell. Con `( export …; ejecutar
+    # … ) || fallos=…` este paso podía fallar y el script terminaba anunciando
+    # "Todo en verde": `fallos` se incrementaba dentro de la subshell —una copia
+    # que muere con ella— y el `||` nunca se disparaba, porque `ejecutar` devuelve
+    # 0 aunque el comando falle (su última sentencia es una asignación). Un
+    # verificador que informa verde sobre un fallo es peor que no tenerlo: da
+    # permiso para pushear. Pasó de verdad, con el `mail.E001` de Django 6.1.
+    #
+    # `DJANGO_ENV_FILE` apunta a un archivo inexistente para que NO se lea
+    # `backend/.env`: en el runner del CI ese archivo no existe, y el de acá es
+    # de desarrollo. Sin esto, la comprobación de producción se hacía sobre la
+    # configuración de desarrollo — misma lección que con el `.env` del frontend:
+    # hay que reproducir el checkout, no solo los comandos.
+    SECRET_KEY_EFIMERA="$("$PY" -c 'import secrets; print(secrets.token_urlsafe(64))')"
+    ejecutar "check --deploy --fail-level WARNING" \
+      env DJANGO_ENV_FILE="$RAIZ/backend/.env.que-no-existe" \
+          DJANGO_SETTINGS_MODULE=config.settings.prod \
+          ALLOWED_HOSTS=tienditademarian.com \
+          DATABASE_URL=sqlite:///db.sqlite3 \
+          SECURE_HTTPS=True \
+          SECRET_KEY="$SECRET_KEY_EFIMERA" \
+          "$PY" manage.py check --deploy --fail-level WARNING
   fi
 fi
 
@@ -101,7 +114,7 @@ fi
 if [ "$QUE" = "entorno" ]; then
   cd "$RAIZ/frontend" || exit 1
 
-  paso "Frontend — en node:20 y sin .env (checkout limpio, como el CI)"
+  paso "Frontend — en node:24 y sin .env (checkout limpio, como el CI)"
 
   if ! docker info > /dev/null 2>&1; then
     error "Docker no está corriendo; no se puede reproducir el entorno del CI"
@@ -111,7 +124,7 @@ if [ "$QUE" = "entorno" ]; then
     # el resultado real. El .dockerignore ya deja fuera .env y node_modules, que
     # es justo lo que se quiere: un checkout limpio.
     cat > .Dockerfile.verificar <<'DOCKER'
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --silent
@@ -120,7 +133,7 @@ CMD ["npx", "vitest", "run"]
 DOCKER
 
     if MSYS_NO_PATHCONV=1 docker build -q -f .Dockerfile.verificar -t tiendita-verificar-front . > /dev/null 2>&1; then
-      ejecutar "vitest en node:20 sin .env" \
+      ejecutar "vitest en node:24 sin .env" \
         env MSYS_NO_PATHCONV=1 docker run --rm --cpus=2 tiendita-verificar-front
     else
       error "no se pudo construir la imagen de verificación"
