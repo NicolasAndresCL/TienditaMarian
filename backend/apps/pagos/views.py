@@ -23,6 +23,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.orden.selectors import ordenes_de
 from apps.orden.serializers import OrdenSerializer
@@ -133,21 +134,34 @@ class IniciarWebpayView(GenericAPIView):
         return Response({"url": intencion.url, "token": intencion.token})
 
 
-@extend_schema_view(
-    post=extend_schema(
+def _esquema_retorno(operation_id: str):
+    """Documenta un verbo del retorno de Webpay.
+
+    Los DOS (POST y GET) tienen que declararse: con uno solo, drf-spectacular
+    intenta adivinar el serializer del otro y emite un W002 — que
+    `check --deploy --fail-level WARNING` convierte en fallo del build.
+    """
+    return extend_schema(
+        operation_id=operation_id,
         summary="Retorno de Webpay (uso interno de Transbank)",
         description=(
             "Transbank devuelve aquí el control cuando la clienta termina. "
-            "Confirma la transacción y redirige al frontend con el resultado."
+            "Confirma la transacción y redirige al frontend con el resultado. "
+            "Acepta POST y GET porque Transbank usa uno u otro según la versión "
+            "de su API y según cómo termine el flujo."
         ),
         tags=["Pagos"],
-        operation_id="retornoWebpay",
         request=None,
         responses={302: OpenApiResponse(description="Redirección al frontend.")},
     )
+
+
+@extend_schema_view(
+    post=_esquema_retorno("retornoWebpay"),
+    get=_esquema_retorno("retornoWebpayGet"),
 )
 @method_decorator(csrf_exempt, name="dispatch")
-class RetornoWebpayView(GenericAPIView):
+class RetornoWebpayView(APIView):
     """Segundo paso: la vuelta desde Transbank.
 
     Es **público a propósito**, y esa decisión no es negociable con el diseño de
@@ -168,7 +182,6 @@ class RetornoWebpayView(GenericAPIView):
     # Sin autenticación en absoluto: si la clase de auth por cookie corriera
     # aquí, exigiría CSRF a una petición que por definición viene de otro sitio.
     authentication_classes = []
-    serializer_class = None
 
     def post(self, request: Request) -> HttpResponseRedirect:
         return self._resolver(request.data or request.query_params)

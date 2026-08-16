@@ -46,6 +46,30 @@ def test_el_esquema_documenta_como_autenticarse(esquema):
     assert esquemas["cookieAuth"]["in"] == "cookie"
 
 
+def test_el_esquema_se_genera_sin_un_solo_warning():
+    """El CI trata los warnings de drf-spectacular como fallo del build.
+
+    `backend-deploy-check` corre `check --deploy --fail-level WARNING`, así que
+    un W001 («no sé describir este autenticador») o un W002 («no puedo adivinar
+    el serializer de esta vista») rompen el pipeline. Pasó tres veces seguidas: la
+    suite y el linter en verde, y el único job que fallaba era el que no se
+    ejecutaba en local.
+
+    Este test adelanta ese fallo a la suite, que sí corre siempre.
+    """
+    from drf_spectacular.drainage import GENERATOR_STATS
+
+    GENERATOR_STATS.reset()
+    with GENERATOR_STATS.silence():
+        SchemaGenerator().get_schema(request=None, public=True)
+
+    avisos = list(GENERATOR_STATS._warn_cache)
+    assert not avisos, (
+        "el esquema genera warnings, y eso rompe `check --deploy --fail-level "
+        "WARNING` en el CI:\n  - " + "\n  - ".join(avisos)
+    )
+
+
 def test_no_hay_operationids_duplicados(esquema):
     ids = [
         op["operationId"]
