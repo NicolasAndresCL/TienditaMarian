@@ -292,7 +292,7 @@ del *skip*, de modo que se ve explícitamente que aquí **no** se salta.
 ### Frontend
 
 ```bash
-npm test          # vitest run
+npm test          # vitest run — 25 tests
 npm run test:cov  # vitest run --coverage
 npm run lint       # eslint .
 npm run build      # vite build → frontend/dist/
