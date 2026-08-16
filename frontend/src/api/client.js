@@ -49,6 +49,17 @@ function agregarCsrf(config) {
 api.interceptors.request.use(agregarCsrf);
 apiSinAuth.interceptors.request.use(agregarCsrf);
 
+// `apiSinAuth` no renueva la sesión —para eso existe, para no caer en un bucle—
+// pero sus errores tienen que llegar traducidos igual que los del otro cliente.
+// Sin esto, el catálogo y el detalle de producto (que son públicos y van por
+// aquí) mostraban "Ocurrió un error." genérico mientras el backend estaba
+// diciendo "El producto no existe": justo lo que el cliente único vino a
+// arreglar, pero solo para la mitad de las llamadas.
+apiSinAuth.interceptors.response.use(
+  (respuesta) => respuesta,
+  (error) => Promise.reject(normalizarError(error)),
+);
+
 // Si varias peticiones reciben 401 a la vez, solo se renueva el token UNA vez y
 // las demás esperan a esa misma promesa. Sin esto, cinco llamadas simultáneas
 // dispararían cinco refresh y, con la rotación activada en el backend, cuatro
