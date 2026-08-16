@@ -23,7 +23,10 @@ os.environ.setdefault("DATABASE_URL", "sqlite://:memory:")
 
 from .base import *  # noqa: E402, F403
 
-EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+# En memoria: la suite inspecciona `mail.outbox` en vez de mandar nada. Se
+# sustituye el mailer entero —no solo el BACKEND— para que no arrastre el host ni
+# el puerto de MailHog, que en un runner de CI no existen.
+MAILERS = {"default": {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"}}
 
 # Hashing rápido: la suite crea muchos usuarios y aquí no medimos criptografía.
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

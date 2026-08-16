@@ -7,6 +7,7 @@ por tanto, con `AllowAny`), de modo que la suite validaba una aplicación que no
 era la que se desplegaba.
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -16,7 +17,13 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
-environ.Env.read_env(BASE_DIR / ".env")
+# `DJANGO_ENV_FILE` permite apuntar a otro archivo —o a uno inexistente— para
+# reproducir un checkout limpio, que es como corre el CI. Sin esto, el
+# `check --deploy` de `scripts/verificar.sh` leía el `backend/.env` de
+# desarrollo y comprobaba una configuración que ningún despliegue va a tener:
+# daba rojo por el backend de correo de consola, que en producción nadie usa.
+# Las variables reales del entorno siguen mandando sobre el archivo.
+environ.Env.read_env(os.environ.get("DJANGO_ENV_FILE") or BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
@@ -261,12 +268,46 @@ WEBPAY_URL_RETORNO = env(
 # Y a dónde se redirige después, ya con el resultado.
 WEBPAY_URL_FRONTEND = env("WEBPAY_URL_FRONTEND", default="http://localhost:5173")
 
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
-EMAIL_HOST = env("EMAIL_HOST", default="localhost")
-EMAIL_PORT = env.int("EMAIL_PORT", default=1025)
-EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
-EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+# Correo: Django 6.1 unificó los `EMAIL_*` sueltos en un único `MAILERS`, con la
+# misma forma que `DATABASES` o `CACHES`. Los antiguos siguen funcionando pero
+# están deprecados y desaparecen en Django 7.0.
+#
+# Las VARIABLES de entorno conservan sus nombres (`EMAIL_HOST`, `EMAIL_PORT`…):
+# lo que cambió es el settings de Django, no el contrato con quien despliega. Un
+# `.env` que ya existía sigue sirviendo tal cual.
+OPCIONES_SMTP = {
+    "host": env("EMAIL_HOST", default="localhost"),
+    "port": env.int("EMAIL_PORT", default=1025),
+    "use_tls": env.bool("EMAIL_USE_TLS", default=False),
+    "username": env("EMAIL_HOST_USER", default=""),
+    "password": env("EMAIL_HOST_PASSWORD", default=""),
+}
+
+
+def construir_mailer(backend: str) -> dict:
+    """Un mailer con las OPTIONS que ESE backend acepta, y ninguna más.
+
+    `MAILERS` valida las opciones contra el backend y lanza
+    `InvalidMailer: Unknown options 'host', 'port'…` ante una que no reconozca —
+    y el de consola, que es el de desarrollo por defecto, no reconoce ninguna de
+    las de SMTP. Con los `EMAIL_*` sueltos esto daba igual: se leían solo si
+    servían.
+
+    La suite no puede cazarlo (corre con el backend en memoria, sin opciones):
+    se descubrió mandando un correo de verdad con el settings de dev. Ahora lo
+    cubre `core/tests/test_mailers.py`, que construye los tres backends reales.
+    """
+    return {
+        "BACKEND": backend,
+        "OPTIONS": OPCIONES_SMTP if backend.endswith("smtp.EmailBackend") else {},
+    }
+
+
+MAILERS = {
+    "default": construir_mailer(
+        env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+    ),
+}
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@tienditademarian.com")
 CONTACTO_EMAIL = env("CONTACTO_EMAIL", default="contacto@tienditademarian.com")
 

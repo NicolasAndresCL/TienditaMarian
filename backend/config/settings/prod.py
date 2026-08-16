@@ -36,6 +36,17 @@ SECURE_HSTS_PRELOAD = SECURE_HTTPS
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
+# En producción el correo sale por SMTP, no por consola. Django 6.1 estrenó el
+# check `mail.E001`, que convierte en ERROR —no aviso— usar un backend de
+# desarrollo con `DEBUG=False`. El default de `base` es el de consola, pensado
+# para desarrollo, y arrastrarlo hasta aquí significa que ningún correo de la
+# tienda saldría: ni la confirmación de compra ni la del pago.
+MAILERS = {  # noqa: F405
+    "default": construir_mailer(  # noqa: F405
+        env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")  # noqa: F405
+    ),
+}
+
 # CSRF_TRUSTED_ORIGINS lo define `base.py`, leyendo la misma variable de entorno
 # pero con un default útil: los orígenes ya autorizados para CORS, que son el
 # frontend. Aquí estaba repetido con `default=[]`, y esa lista vacía dejaba sin

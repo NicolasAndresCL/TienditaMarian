@@ -7,6 +7,6 @@ DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0"]
 
 # MailHog en localhost:1025 si está levantado; si no, los correos salen por consola.
-EMAIL_BACKEND = env(  # noqa: F405
-    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
-)
+# El `MAILERS` de `base` ya lee `EMAIL_BACKEND` del entorno con este mismo
+# default, así que aquí no hay nada que reescribir: la línea que había era una
+# copia literal de la de `base`.
