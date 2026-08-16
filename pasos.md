@@ -246,7 +246,13 @@ El CI exige **90 %** de cobertura (`--cov-fail-under=90`); la real es 91,8 %.
 ```bash
 ./scripts/verificar.sh              # todo
 ./scripts/verificar.sh backend      # solo backend
+./scripts/verificar.sh entorno      # la suite del frontend DENTRO de node:20, sin .env
 ```
+
+El modo `entorno` reproduce el **checkout del CI**, no solo sus comandos: corre
+los tests en una imagen limpia, con `npm ci`, la misma versión de Node y **sin
+`frontend/.env`** —que está en `.gitignore` y allí no existe—. Es la única forma
+de cazar un fallo que dependa de una variable de entorno que en local sí está.
 
 **Mejor: que lo haga solo.** Hay un hook de `pre-push` que ejecuta esa
 verificación y **cancela el push si algo falla**. Se activa una vez por clon:
