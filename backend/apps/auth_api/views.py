@@ -197,9 +197,15 @@ class MeAPIView(GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = None
 
-    # El frontend llama aquí al arrancar, así que es el sitio natural para
-    # plantar el token CSRF: garantiza que esté disponible antes de la primera
-    # petición que escriba, venga la usuaria de donde venga.
+    # El frontend llama aquí al arrancar, así que renueva el token CSRF de una
+    # sesión que vuelve, sin esperar a un login nuevo.
+    #
+    # Ojo con lo que NO hace: sin sesión, el permiso rechaza con 401 antes de que
+    # el decorador llegue a ejecutarse, así que aquí no se planta ningún token
+    # para una visitante anónima. No hace falta —el registro y el login lo
+    # plantan ellos, y el CSRF solo se exige a las peticiones autenticadas por
+    # cookie—, pero conviene no creerse que este endpoint cubre ese caso: si algún
+    # día hay una escritura anónima que exija CSRF, tendrá que plantarlo ella.
     @method_decorator(ensure_csrf_cookie)
     def get(self, request: Request) -> Response:
         return Response(

@@ -209,6 +209,18 @@ jobs:
         # que no tiene nada que ver con la aplicación.
         run: bash scripts/smoke.sh
 
+      - name: Humo de producción estricta (detrás de un proxy TLS)
+        # El stack de arriba corre con SECURE_HTTPS=False, porque en local no hay
+        # TLS. O sea que la mitad del hardening —redirección, HSTS, cookies
+        # Secure, reconocimiento del proxy— no se ejecutaba en ninguna
+        # verificación: `check --deploy` mira que los settings estén puestos, no
+        # que la aplicación siga respondiendo con ellos.
+        #
+        # Lo que busca es el fallo más común de Django tras un proxy: si no
+        # reconoce `X-Forwarded-Proto`, redirige a https, el proxy vuelve por
+        # http, y el sitio queda en bucle infinito con el CI en verde.
+        run: bash scripts/humo-produccion.sh
+
       - name: Logs si algo falló
         if: failure()
         run: docker compose logs --tail 80
