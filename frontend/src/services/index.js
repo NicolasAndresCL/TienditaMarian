@@ -142,3 +142,30 @@ export async function pagarOrden(id) {
   const { data } = await api.post(`/ordenes/${id}/pagar/`, {});
   return data;
 }
+
+/** Reserva la transacción en Webpay y devuelve a dónde hay que ir a pagar.
+ *
+ * No completa el pago: devuelve `{ url, token }`. La clienta tiene que llegar a
+ * esa URL **por POST**, con el token en un campo `token_ws` — Transbank no
+ * acepta una redirección normal. Lo hace `redirigirAWebpay`.
+ */
+export async function iniciarPagoWebpay(id) {
+  const { data } = await api.post(`/ordenes/${id}/pagar/webpay/`, {});
+  return data;
+}
+
+/** Envía el navegador a Transbank con el token, por POST. */
+export function redirigirAWebpay({ url, token }) {
+  const formulario = document.createElement('form');
+  formulario.method = 'POST';
+  formulario.action = url;
+
+  const campo = document.createElement('input');
+  campo.type = 'hidden';
+  campo.name = 'token_ws';
+  campo.value = token;
+
+  formulario.appendChild(campo);
+  document.body.appendChild(formulario);
+  formulario.submit();
+}

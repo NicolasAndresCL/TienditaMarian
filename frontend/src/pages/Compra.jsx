@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { obtenerOrden, pagarOrden } from '../services';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { iniciarPagoWebpay, obtenerOrden, pagarOrden, redirigirAWebpay } from '../services';
 import { Boton, Cargando, MensajeError } from '../components/ui';
+
+// Cómo vuelve la clienta desde Transbank. El backend lo pone en la URL porque el
+// retorno es un POST cross-site y no puede traer estado de sesión.
+const MENSAJES_DE_VUELTA = {
+  anulado: 'Cancelaste el pago. Tu orden sigue esperando.',
+  rechazado: 'El pago fue rechazado. Puedes intentarlo de nuevo.',
+  desconocido: 'No pudimos identificar ese pago. Si te cobraron, escríbenos.',
+};
 
 export default function Compra() {
   const { id } = useParams();
+  const [parametros] = useSearchParams();
   const [orden, setOrden] = useState(null);
   const [error, setError] = useState(null);
   const [pagando, setPagando] = useState(false);
+
+  const resultadoWebpay = parametros.get('pago');
+  const avisoDeVuelta = MENSAJES_DE_VUELTA[resultadoWebpay];
 
   useEffect(() => {
     obtenerOrden(id).then(setOrden).catch(setError);
@@ -27,6 +39,19 @@ export default function Compra() {
     }
   };
 
+  const alPagarConWebpay = async () => {
+    setPagando(true);
+    setError(null);
+    try {
+      // No hay `finally` que reactive el botón: si esto funciona, el navegador
+      // ya se fue a Transbank y esta página deja de existir.
+      redirigirAWebpay(await iniciarPagoWebpay(id));
+    } catch (fallo) {
+      setError(fallo);
+      setPagando(false);
+    }
+  };
+
   if (error && !orden) return <MensajeError error={error} />;
   if (!orden) return <Cargando texto="Buscando tu compra…" />;
 
@@ -40,6 +65,12 @@ export default function Compra() {
       </p>
 
       <MensajeError error={error} onCerrar={() => setError(null)} />
+
+      {avisoDeVuelta && !orden.pagado && (
+        <p role="alert" className="mb-4 p-3 rounded bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+          {avisoDeVuelta}
+        </p>
+      )}
 
       <ul className="bg-white rounded shadow divide-y text-left mb-6">
         {orden.items.map((item) => (
@@ -63,9 +94,15 @@ export default function Compra() {
           Pago recibido. Estamos preparando tu pedido.
         </p>
       ) : (
-        <div className="mb-6">
-          <Boton onClick={alPagar} disabled={pagando}>
-            {pagando ? 'Procesando el pago…' : `💳 Pagar $${Number(orden.total).toLocaleString('es-CL')}`}
+        <div className="mb-6 space-y-3">
+          <Boton onClick={alPagarConWebpay} disabled={pagando}>
+            {pagando ? 'Conectando con Webpay…' : `💳 Pagar $${Number(orden.total).toLocaleString('es-CL')} con Webpay`}
+          </Boton>
+
+          {/* La transferencia que la tienda confirma a mano: sigue siendo un
+              medio de pago válido, no un botón de pruebas. */}
+          <Boton onClick={alPagar} disabled={pagando} variante="secundario">
+            {pagando ? 'Procesando…' : 'Pagar por transferencia'}
           </Boton>
         </div>
       )}
