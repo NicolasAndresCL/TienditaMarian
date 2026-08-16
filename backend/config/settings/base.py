@@ -240,6 +240,27 @@ CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 # están autorizados para CORS: son el mismo frontend.
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=CORS_ALLOWED_ORIGINS)
 
+# ------------------------------------------------------------------- Webpay
+#
+# Credenciales del ambiente de INTEGRACIÓN de Transbank, que son públicas y las
+# publica el propio SDK: sirven para desarrollar sin contrato de comercio. En
+# producción se sustituyen por las reales y `WEBPAY_PRODUCCION=True`.
+WEBPAY_COMMERCE_CODE = env("WEBPAY_COMMERCE_CODE", default="597055555532")
+WEBPAY_API_KEY = env(
+    "WEBPAY_API_KEY",
+    default="579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C",
+)
+WEBPAY_PRODUCCION = env.bool("WEBPAY_PRODUCCION", default=False)
+
+# A dónde vuelve la clienta desde Transbank. Es una URL del BACKEND, no del
+# frontend: la vuelta es un POST y hay que confirmar la transacción antes de
+# enseñar nada.
+WEBPAY_URL_RETORNO = env(
+    "WEBPAY_URL_RETORNO", default="http://localhost:8000/api/v1/pagos/webpay/retorno/"
+)
+# Y a dónde se redirige después, ya con el resultado.
+WEBPAY_URL_FRONTEND = env("WEBPAY_URL_FRONTEND", default="http://localhost:5173")
+
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = env("EMAIL_HOST", default="localhost")
 EMAIL_PORT = env.int("EMAIL_PORT", default=1025)

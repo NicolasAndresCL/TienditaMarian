@@ -38,7 +38,7 @@ from apps.carrito.views import (
 )
 from apps.envios.views import EnvioDetailView, EnvioListCreateView
 from apps.orden.views import OrdenDetailView, OrdenListView
-from apps.pagos.views import PagarOrdenView
+from apps.pagos.views import IniciarWebpayView, PagarOrdenView, RetornoWebpayView
 from apps.productos.views.producto_views import (
     ProductoCreateView,
     ProductoDeleteView,
@@ -77,6 +77,7 @@ ordenes_patterns = [
     # Cuelga de la orden y no de /pagos/ porque lo que se pide es "cobrá ESTA
     # orden": el pago es el efecto, no el recurso que se identifica.
     path("<int:pk>/pagar/", PagarOrdenView.as_view(), name="ordenes-pagar"),
+    path("<int:pk>/pagar/webpay/", IniciarWebpayView.as_view(), name="ordenes-pagar-webpay"),
 ]
 
 envios_patterns = [
@@ -90,6 +91,9 @@ urlpatterns = [
     path("checkout/", CheckoutView.as_view(), name="checkout"),
     path("ordenes/", include((ordenes_patterns, "ordenes"))),
     path("envios/", include((envios_patterns, "envios"))),
+    # El retorno de Transbank NO cuelga de una orden: llega sin sesión y se
+    # identifica solo por el `token_ws`.
+    path("pagos/webpay/retorno/", RetornoWebpayView.as_view(), name="webpay-retorno"),
     path("pagos/", include("apps.pagos.urls")),
     path("reviews/", include("apps.reviews.urls")),
     path("descuentos/", include("apps.descuentos.urls")),
