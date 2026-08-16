@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+#
+# Corre la verificación del CI antes de dejar pushear.
+#
+# Existe porque hubo tres corridas seguidas en rojo: en local se ejecutaban
+# `pytest` y `ruff` —ambos en verde— y el único job que fallaba era el único que
+# nadie reproducía a mano. Un paso obligatorio que se puede omitir sin que pase
+# nada no es obligatorio: es un recordatorio, y los recordatorios fallan justo
+# cuando estás concentrado en otra cosa.
+#
+# Se activa una vez por clon:
+#
+#     git config core.hooksPath .githooks
+#
+# Y se puede saltar en un push concreto (por ejemplo, para subir una rama a
+# medias y ver qué dice el CI):
+#
+#     git push --no-verify
+
+set -uo pipefail
+
+RAIZ="$(git rev-parse --show-toplevel)"
+
+# Solo verifica si el push lleva cambios que el CI mire. Un push que solo toca
+# documentación no tiene por qué esperar a la suite entera.
+RELEVANTES='^(backend|frontend|scripts)/|^\.github/workflows/|^docker-compose\.yml$'
+
+# Los commits que se van a subir: lo que hay en local y no en el remoto.
+rango="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null)"
+if [ -n "$rango" ]; then
+  archivos="$(git diff --name-only "$rango"...HEAD 2>/dev/null)"
+else
+  # Rama nueva, sin upstream: se miran los commits que no están en main.
+  archivos="$(git diff --name-only origin/main...HEAD 2>/dev/null || git diff --name-only HEAD~1...HEAD)"
+fi
+
+if ! printf '%s\n' "$archivos" | grep -qE "$RELEVANTES"; then
+  echo "pre-push: el push no toca código ni CI; no se verifica."
+  exit 0
+fi
+
+echo "pre-push: verificando lo mismo que el CI antes de subir…"
+echo "          (para saltarlo: git push --no-verify)"
+echo
+
+if bash "$RAIZ/scripts/verificar.sh"; then
+  exit 0
+fi
+
+cat <<'FIN'
+
+╭──────────────────────────────────────────────────────────────╮
+│  Push cancelado: esto mismo fallaría en el CI.               │
+│  Corregí lo de arriba y volvé a intentarlo.                  │
+╰──────────────────────────────────────────────────────────────╯
+
+FIN
+exit 1

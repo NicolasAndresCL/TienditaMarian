@@ -12,6 +12,7 @@ TienditaMarian/
 ├── .github/workflows/     CI unificado (backend + frontend + humo del stack)
 ├── scripts/smoke.sh       humo del stack levantado (lo usa el CI y se corre en local)
 ├── scripts/verificar.sh   reproduce el CI en local, antes de pushear
+├── .githooks/pre-push     lo ejecuta solo y cancela el push si falla
 ├── Jenkinsfile            Pipeline equivalente para Jenkins
 ├── pasos.md               Runbook: cómo levantarlo en local y en la web
 └── docs/hosting-y-dominio.md   Dónde alojar web, base de datos y dominio
@@ -98,7 +99,8 @@ aparecen al construir el artefacto y arrancarlo. Corre
 contra un `docker compose up` para reproducir el pipeline entero.
 
 **Antes de pushear**: [`scripts/verificar.sh`](scripts/verificar.sh) reproduce en
-local los cuatro primeros jobs. Existe porque hubo tres corridas en rojo por
+local los cuatro primeros jobs, y el hook `.githooks/pre-push` lo ejecuta solo
+(actívalo una vez con `git config core.hooksPath .githooks`). Existe porque hubo tres corridas en rojo por
 warnings de drf-spectacular mientras `pytest` y `ruff` estaban en verde: el
 único job que fallaba era el que no se ejecutaba a mano.
 

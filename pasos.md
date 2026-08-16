@@ -248,6 +248,18 @@ El CI exige **90 %** de cobertura (`--cov-fail-under=90`); la real es 91,8 %.
 ./scripts/verificar.sh backend      # solo backend
 ```
 
+**Mejor: que lo haga solo.** Hay un hook de `pre-push` que ejecuta esa
+verificación y **cancela el push si algo falla**. Se activa una vez por clon:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Solo se dispara si el push toca `backend/`, `frontend/`, `scripts/` o el
+workflow: un push de documentación no espera a la suite. Y se puede saltar
+puntualmente con `git push --no-verify` (por ejemplo, para subir una rama a
+medias y ver qué dice el CI).
+
 Corre lo mismo que el pipeline: `ruff`, la suite con el 90 % de cobertura
 exigido, el `check --deploy --fail-level WARNING` **contra la configuración de
 producción**, y el lint + tests + build del frontend.
@@ -442,6 +454,7 @@ archivos estáticos o CDN (Netlify, Vercel, S3+CloudFront, nginx propio, etc.).
 | Test de concurrencia (real, con Postgres) | `docker compose --profile test run --rm tests` |
 | Humo del stack levantado | `bash scripts/smoke.sh` |
 | **Reproducir el CI antes de pushear** | `bash scripts/verificar.sh` |
+| Activar el hook que lo hace solo | `git config core.hooksPath .githooks` |
 | Sembrar el catálogo demo (Docker) | `docker compose exec backend python manage.py cargar_productos` |
 | Lint backend | `ruff check .` |
 | Hardening de producción | `DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py check --deploy` |
