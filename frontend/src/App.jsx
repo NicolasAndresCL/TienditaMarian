@@ -4,6 +4,7 @@ import { CarritoProvider } from './context/CarritoContext';
 import Navbar from './components/Navbar';
 import RutaProtegida from './components/RutaProtegida';
 import Catalogo from './pages/Catalogo';
+import Producto from './pages/Producto';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Carrito from './pages/Carrito';
@@ -29,6 +30,9 @@ export default function App() {
 
             <Routes>
               <Route path="/" element={<Catalogo />} />
+              {/* Pública: el catálogo se mira sin cuenta, y agregar al carrito
+                  ya redirige al login por su cuenta. */}
+              <Route path="/producto/:id" element={<Producto />} />
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
 

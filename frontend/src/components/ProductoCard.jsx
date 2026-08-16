@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, useCarrito } from '../context/contextos';
 import { Boton, MensajeError } from './ui';
 
@@ -48,7 +48,12 @@ export default function ProductoCard({ producto }) {
 
   return (
     <article className="bg-rose-100 rounded-lg shadow hover:shadow-lg transition duration-300 p-4 flex flex-col items-center outline-solid outline-pink-300">
-      <div className="flex justify-center items-center bg-violet-100 h-48 w-full rounded-md overflow-hidden mb-4">
+      {/* La imagen y el título llevan al detalle: es donde cabe la descripción
+          entera y desde donde se puede compartir el enlace de un juguete. */}
+      <Link
+        to={`/producto/${producto.id}`}
+        className="flex justify-center items-center bg-violet-100 h-48 w-full rounded-md overflow-hidden mb-4"
+      >
         {producto.image ? (
           <img
             src={producto.image}
@@ -59,12 +64,14 @@ export default function ProductoCard({ producto }) {
         ) : (
           <span className="text-4xl">🧸</span>
         )}
-      </div>
+      </Link>
 
       <h3 className="text-lg font-bold text-gray-800 text-center mb-2 tracking-tight">
-        🧸 {producto.nombre}
+        <Link to={`/producto/${producto.id}`} className="hover:underline">
+          🧸 {producto.nombre}
+        </Link>
       </h3>
-      <p className="text-sm text-gray-700 text-center mb-2">{producto.descripcion}</p>
+      <p className="text-sm text-gray-700 text-center mb-2 line-clamp-2">{producto.descripcion}</p>
 
       <p className="text-lg font-semibold text-pink-700 text-center">
         💲 ${Number(producto.precio).toLocaleString('es-CL')}

@@ -4,7 +4,8 @@ import { useCarrito } from '../context/contextos';
 import { Boton, MensajeError, Cargando, Vacio, Input } from '../components/ui';
 
 export default function Carrito() {
-  const { items, total, cargando, error, actualizar, quitar, comprar, limpiarError } = useCarrito();
+  const { items, total, cargando, error, actualizar, quitar, vaciar, comprar, limpiarError } =
+    useCarrito();
   const [cupon, setCupon] = useState('');
   const [comprando, setComprando] = useState(false);
   const navegar = useNavigate();
@@ -21,7 +22,21 @@ export default function Carrito() {
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-pink-700 mb-6">Tu carrito</h1>
+      <div className="flex items-baseline justify-between mb-6">
+        <h1 className="text-3xl font-bold text-pink-700">Tu carrito</h1>
+
+        {/* `vaciar` existía en el contexto desde el primer día y no lo llamaba
+            ningún componente: la única forma de vaciar el carrito era quitar los
+            productos de uno en uno. */}
+        {items.length > 0 && (
+          <button
+            onClick={vaciar}
+            className="text-sm text-pink-600 underline hover:text-pink-800"
+          >
+            Vaciar carrito
+          </button>
+        )}
+      </div>
 
       <MensajeError error={error} onCerrar={limpiarError} />
 
