@@ -112,9 +112,41 @@ orden y emite `ORDEN_PAGADA` (correo de confirmación + notificación). Es
 **idempotente**: reintentarlo sobre una orden ya pagada devuelve 409
 `orden_ya_pagada`, nunca un segundo cobro.
 
-Hoy la pasarela es `PagoManual` —la transferencia que la tienda confirma—, pero
-`PasarelaPago` es una interfaz: añadir Webpay es escribir una subclase, sin que
-el checkout ni las órdenes se enteren.
+### Webpay Plus
+
+Hay dos formas de cobrar, y son abstracciones distintas porque el dinero se
+mueve distinto:
+
+| | `PasarelaPago` | `PasarelaRedirigida` |
+|---|---|---|
+| Cómo cobra | en una llamada | en dos pasos, con una visita a otro sitio |
+| Quién la implementa | `PagoManual` (transferencia) | `PagoWebpay` (Transbank) |
+| Endpoint | `POST /ordenes/<id>/pagar/` | `POST /ordenes/<id>/pagar/webpay/` |
+
+El flujo de Webpay:
+
+```
+1. POST /ordenes/<id>/pagar/webpay/   → { url, token }   ← con sesión
+2. el navegador va a `url` por POST con `token_ws`
+3. la clienta paga en Transbank
+4. POST /pagos/webpay/retorno/        ← SIN sesión, desde el dominio de Transbank
+5. redirección a /compra/<id>?pago=pagado|rechazado|anulado
+```
+
+**El paso 4 es público a propósito, y no es negociable**: Transbank devuelve el
+control con un POST desde su dominio, y una cookie `SameSite=Lax` no viaja en un
+POST cross-site. Si ese endpoint exigiera sesión, ningún pago podría confirmarse
+jamás. Lo que lo autentica es el `token_ws`: un secreto de un solo uso que solo
+está en el servidor de Transbank y en nuestra fila de `Pago`.
+
+Una transacción se da por buena **solo** si `response_code == 0` **y**
+`status == "AUTHORIZED"`. Comprobar una sola de las dos daría por pagada una que
+no lo está.
+
+Las credenciales del ambiente de integración son públicas (las trae el propio
+SDK), así que se puede desarrollar y probar el flujo completo sin contrato de
+comercio. En producción se definen `WEBPAY_COMMERCE_CODE`, `WEBPAY_API_KEY` y
+`WEBPAY_PRODUCCION=True`.
 
 **Defensa en profundidad del inventario:** `select_for_update` protege desde la
 aplicación y un `CheckConstraint` de `stock >= 0` protege desde la base. Esa
@@ -134,7 +166,8 @@ aplicación y un `CheckConstraint` de `stock >= 0` protege desde la base. Esa
 | `DELETE` | `/api/v1/carrito/items/quitar/` · `/carrito/vaciar/` | sesión |
 | `POST` | `/api/v1/checkout/` | sesión |
 | `GET` | `/api/v1/ordenes/` · `/<id>/` | dueño |
-| `POST` | `/api/v1/ordenes/<id>/pagar/` | dueño |
+| `POST` | `/api/v1/ordenes/<id>/pagar/` · `/pagar/webpay/` | dueño |
+| `POST` `GET` | `/api/v1/pagos/webpay/retorno/` | **público** (lo llama Transbank) |
 | `GET` `POST` | `/api/v1/envios/` · `/api/v1/pagos/` | dueño |
 | `GET` | `/api/v1/reviews/` | público |
 | `POST` `PATCH` `DELETE` | `/api/v1/reviews/…` | autor |
@@ -169,7 +202,7 @@ mirar el token para saber si hay sesión: lo pregunta.
 ## Tests
 
 ```bash
-pytest                            # 173 tests · 92 % de cobertura
+pytest                            # 188 tests · 92 % de cobertura
 pytest --cov                      # con cobertura
 ruff check .                      # lint
 python manage.py check --deploy   # hardening de producción
