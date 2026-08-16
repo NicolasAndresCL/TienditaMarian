@@ -187,9 +187,33 @@ class CheckoutService:
         # Despachador inyectable: en los tests se pasa uno vacío para probar la
         # regla de negocio sin disparar correos ni notificaciones.
         self.despachador = despachador or despachador_global
+        self._producto_sin_stock: Producto | None = None
+
+    def ejecutar(self, cupon: str | None = None) -> Orden:
+        """Punto de entrada. La transacción vive un nivel más adentro, a propósito.
+
+        `STOCK_AGOTADO` se emitía **dentro** de la transacción, justo antes de
+        lanzar `StockInsuficienteError` — es decir, justo antes de que todo se
+        revirtiera. Un suscriptor que escribiera en la base (una notificación
+        para la tienda, por ejemplo) se ejecutaba sin error y no dejaba ni una
+        fila: el rollback se llevaba también su trabajo. Comprobado: el
+        suscriptor corría y la tabla quedaba en 0.
+
+        `ORDEN_CREADA` no tenía el problema porque va con `on_commit`; aquí ese
+        truco no sirve, porque nunca hay commit. La única salida es anunciar el
+        hecho después de que la transacción haya terminado de revertirse.
+        """
+        try:
+            return self._ejecutar_en_transaccion(cupon)
+        except StockInsuficienteError:
+            # Aquí la transacción YA revertió: lo que escriba un suscriptor
+            # persiste.
+            if self._producto_sin_stock is not None:
+                self.despachador.emitir(Evento.STOCK_AGOTADO, self._producto_sin_stock)
+            raise
 
     @transaction.atomic
-    def ejecutar(self, cupon: str | None = None) -> Orden:
+    def _ejecutar_en_transaccion(self, cupon: str | None = None) -> Orden:
         items = self._items_bloqueados()
 
         if not items:
@@ -232,7 +256,10 @@ class CheckoutService:
 
         if faltantes:
             item = faltantes[0]
-            self.despachador.emitir(Evento.STOCK_AGOTADO, item.producto)
+            # No se emite aquí: estamos dentro de la transacción que este mismo
+            # `raise` va a revertir. Se anota y lo anuncia `ejecutar()`, ya
+            # fuera. Ver su docstring.
+            self._producto_sin_stock = item.producto
             raise StockInsuficienteError(
                 item.producto.nombre, item.cantidad, item.producto.stock
             )

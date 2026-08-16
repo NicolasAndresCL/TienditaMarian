@@ -104,6 +104,12 @@ transacción — si algo falla, se revierte entero:
 Los efectos del paso 7 son suscriptores desacoplados (`core/events.py`): si el
 servidor de correo está caído, la venta ya ocurrió y queda registrada igual.
 
+Si el paso 2 falla, la transacción revierte y `ejecutar()` emite `STOCK_AGOTADO`
+—aviso de venta perdida al staff— **fuera** del bloque transaccional. Tiene que
+ser fuera: un suscriptor que escribiera en la base desde dentro vería su trabajo
+revertido junto con la orden que nunca existió, sin dar ningún error. Y aquí
+`on_commit` no sirve de nada, porque este camino nunca llega a hacer commit.
+
 ### El cobro
 
 `POST /api/v1/ordenes/<id>/pagar/` delega en `PagoService`, que bloquea la fila
