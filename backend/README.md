@@ -1,6 +1,6 @@
 # 🧸 Tiendita de Marian — Backend
 
-API REST de una tienda en línea real, construida con **Django 5.2 + DRF + JWT +
+API REST de una tienda en línea real, construida con **Django 6.1 + DRF + JWT +
 PostgreSQL**: catálogo, carrito, checkout transaccional, órdenes, pagos, envíos,
 descuentos, reseñas y auditoría de eventos.
 
@@ -248,7 +248,7 @@ found`: su imagen es la de producción.
 
 ## Stack
 
-Django 5.2 · DRF 3.16 · SimpleJWT · drf-spectacular · PostgreSQL (psycopg 3) ·
+Django 6.1 · DRF 3.18 · SimpleJWT · drf-spectacular · PostgreSQL (psycopg 3) ·
 pytest · ruff · Docker · GitHub Actions
 
 ---

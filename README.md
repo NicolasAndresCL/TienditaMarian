@@ -6,8 +6,8 @@ reseñas y auditoría de eventos.
 
 ```
 TienditaMarian/
-├── backend/      API REST — Django 5.2 + DRF + JWT + PostgreSQL
-├── frontend/     SPA — React 19 + Vite 7 + Tailwind 4
+├── backend/      API REST — Django 6.1 + DRF + JWT + PostgreSQL
+├── frontend/     SPA — React 19 + Vite 8 + Tailwind 4
 ├── docker-compose.yml     Orquesta backend + frontend + PostgreSQL + MailHog
 ├── .github/workflows/     CI unificado (backend + frontend + humo del stack)
 ├── scripts/smoke.sh       humo del stack levantado (lo usa el CI y se corre en local)
@@ -51,14 +51,14 @@ está en **[`pasos.md`](pasos.md)**.
 
 | | Backend (`backend/`) | Frontend (`frontend/`) |
 |---|---|---|
-| Stack | Django 5.2 · DRF · SimpleJWT · PostgreSQL | React 19 · Vite 7 · Tailwind 4 |
+| Stack | Django 6.1 · DRF · SimpleJWT · PostgreSQL | React 19 · Vite 8 · Tailwind 4 (Node 24) |
 | Arranque | `python manage.py runserver` | `npm run dev` |
-| Tests | `pytest` (194, 93 % de cobertura) | `npm test` (25) |
+| Tests | `pytest` (198, 93 % de cobertura) | `npm test` (26) |
 | Lint | `ruff check .` | `npm run lint` |
 | Detalle | [`backend/README.md`](backend/README.md) | `frontend/package.json` |
 
-Sobre SQLite pasan 193 y se salta el de concurrencia del checkout, que necesita
-PostgreSQL: `docker compose --profile test run --rm tests` corre los 194.
+Sobre SQLite pasan 197 y se salta el de concurrencia del checkout, que necesita
+PostgreSQL: `docker compose --profile test run --rm tests` corre los 198.
 
 El backend documenta su arquitectura por capas (`core/`, `services`, `selectors`),
 la decisión de diseño **ADR-001** (`GenericAPIView` + mixins sobre ViewSets) y el
