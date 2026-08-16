@@ -8,7 +8,11 @@
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
-const API = 'http://localhost:8000/api/v1';
+// Se deriva de la MISMA variable que usa el cliente HTTP real, no de una copia
+// escrita a mano: si las dos divergen, MSW deja de reconocer las peticiones y
+// estas salen a la red de verdad, con un error de "sin conexión" que no dice
+// nada de la causa. Su valor para los tests lo fija `vite.config.js`.
+const API = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
 
 export const PRODUCTOS = [
   {

@@ -12,6 +12,25 @@ import { leerTokenCsrf } from './tokens';
  * CSRF, que es lo que se prueba ahora.
  */
 
+describe('configuración del cliente', () => {
+  it('la URL base de la API está definida', () => {
+    // Regresión del CI: `frontend/.env` está en .gitignore, así que en el
+    // pipeline no existe y `VITE_API_BASE_URL` quedaba en `undefined`. El
+    // cliente pedía `/undefined/api/v1/…`, MSW no reconocía esas URLs y las
+    // peticiones salían a la red de verdad: 13 tests en rojo con un "No pudimos
+    // conectar con la tienda" que no señalaba la causa por ningún lado.
+    //
+    // El valor para los tests lo fija `vite.config.js` (test.env), igual que
+    // `config/settings/test.py` hace en el backend. Este test protege esa
+    // garantía: es barato y corre siempre.
+    const base = import.meta.env.VITE_API_BASE_URL;
+
+    expect(base).toBeTruthy();
+    expect(String(base)).not.toContain('undefined');
+    expect(String(base)).toMatch(/^https?:\/\//);
+  });
+});
+
 describe('token CSRF', () => {
   beforeEach(() => {
     // jsdom acumula cookies entre tests; se limpian caducándolas.
