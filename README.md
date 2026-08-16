@@ -11,10 +11,12 @@ TienditaMarian/
 ├── docker-compose.yml     Orquesta backend + frontend + PostgreSQL + MailHog
 ├── .github/workflows/     CI unificado (backend + frontend + humo del stack)
 ├── scripts/smoke.sh       humo del stack levantado (lo usa el CI y se corre en local)
+├── scripts/humo-produccion.sh  arranca con SECURE_HTTPS=True y prueba tras un proxy TLS
 ├── scripts/verificar.sh   reproduce el CI en local, antes de pushear
 ├── .githooks/pre-push     lo ejecuta solo y cancela el push si falla
 ├── Jenkinsfile            Pipeline equivalente para Jenkins
 ├── pasos.md               Runbook: cómo levantarlo en local y en la web
+├── docs/despliegue.md     Qué falta para sacarlo a internet, y en qué orden
 └── docs/hosting-y-dominio.md   Dónde alojar web, base de datos y dominio
 ```
 
@@ -77,7 +79,10 @@ flujo del checkout transaccional en su propio README.
 - **PostgreSQL** por `DATABASE_URL` (SQLite solo en tests).
 - **Dónde alojarlo**: la recomendación concreta (frontend, API, Postgres, dominio,
   correo — con un stack de arranque casi $0) está en
-  [`docs/hosting-y-dominio.md`](docs/hosting-y-dominio.md).
+  [`docs/hosting-y-dominio.md`](docs/hosting-y-dominio.md), y **qué falta para
+  sacarlo a internet**, en orden, en [`docs/despliegue.md`](docs/despliegue.md).
+  La configuración de producción está lista y verificada; no se ha desplegado
+  todavía.
 
 ## CI
 
@@ -89,7 +94,7 @@ flujo del checkout transaccional en su propio README.
 | `backend-postgres` | la misma suite contra PostgreSQL real, donde `select_for_update` sí bloquea |
 | `backend-deploy-check` | `check --deploy --fail-level WARNING` contra la config de producción |
 | `frontend` | `eslint`, `vitest` y que el bundle **construya** |
-| `docker-smoke` | construye las dos imágenes, **levanta el stack y lo usa** |
+| `docker-smoke` | construye las dos imágenes, **levanta el stack y lo usa**, y arranca el backend con el hardening de producción activo |
 
 El último existe porque los otros cuatro llegaron a estar en verde sobre una
 aplicación que no abría: hay fallos —rutas de estáticos sensibles a mayúsculas,

@@ -7,8 +7,9 @@ __pycache__/
 # archivos de configuración sensibles
 .env
 .env*
-# ...pero la plantilla sin secretos sí se versiona
+# ...pero las plantillas sin secretos sí se versionan
 !.env.example
+!.env.produccion.example
 
 # base de datos local
 *.sqlite3
