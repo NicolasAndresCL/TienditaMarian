@@ -196,7 +196,21 @@ describe('detalle de producto', () => {
 
   it('avisa si el juguete no existe', async () => {
     conSesion();
+
+    // Con su propio contador, igual que el carrito: así el test espera a que el
+    // backend haya respondido de verdad. Sin eso, en un runner cargado la
+    // aserción llegaba antes que la respuesta y lo que se veía era el error de
+    // "sin conexión" del cliente HTTP, no el 404 que se quiere comprobar.
+    const pedidos = { veces: 0 };
+    servidor.use(
+      http.get(`${API}/productos/999/`, () => {
+        pedidos.veces += 1;
+        return errorDeApi('producto_no_encontrado', 'El producto no existe.', {}, 404);
+      }),
+    );
+
     montar('/producto/999');
+    await waitFor(() => expect(pedidos.veces).toBeGreaterThan(0), { timeout: 10000 });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/no existe/);
   });
