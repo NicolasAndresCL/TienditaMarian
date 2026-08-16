@@ -51,16 +51,26 @@ function conCarrito(items = []) {
 }
 
 /**
- * Espera a que el carrito esté cargado con sus productos.
+ * Monta la página del carrito y espera a que TERMINE de cargar.
  *
- * Cargarlo son DOS peticiones encadenadas: primero `/auth/me/` —porque con la
- * sesión en una cookie httpOnly hay que preguntar quién es— y solo entonces
- * `/carrito/`. El segundo por defecto de Testing Library se queda corto cuando
- * la suite va cargada, y el síntoma engaña: se ve el carrito vacío, que es el
- * estado inicial legítimo mientras no se sabe si hay sesión.
+ * Esperar por tiempo aquí no sirve, y este test lo demostró: cargar el carrito
+ * son DOS peticiones encadenadas —`/auth/me/` primero, porque con la sesión en
+ * una cookie httpOnly hay que preguntar quién es, y solo entonces `/carrito/`—
+ * y el runner del CI es bastante más lento que una máquina de desarrollo. Con un
+ * timeout de 3 s pasaba en local y fallaba en CI.
+ *
+ * El síntoma engaña además: se ve "Tu carrito está vacío", que es el estado
+ * inicial legítimo mientras no se sabe si hay sesión, no un error.
+ *
+ * Así que se espera al HECHO de que el backend haya respondido —el contador del
+ * handler— y no a que pase un rato. Eso no depende de la velocidad de nadie.
  */
-async function esperarCarritoCargado(nombreProducto) {
-  return screen.findByText(nombreProducto, {}, { timeout: 3000 });
+async function montarCarritoCargado(items) {
+  const pedidos = conCarrito(items);
+  montar('/carrito');
+
+  await waitFor(() => expect(pedidos.veces).toBeGreaterThan(0), { timeout: 10000 });
+  return pedidos;
 }
 
 function itemDeCarrito(producto, cantidad) {
@@ -196,56 +206,44 @@ describe('carrito y compra', () => {
   beforeEach(conSesion);
 
   it('muestra los productos con su total', async () => {
-    conCarrito([itemDeCarrito(PRODUCTOS[0], 2)]);
-
-    montar('/carrito');
+    await montarCarritoCargado([itemDeCarrito(PRODUCTOS[0], 2)]);
 
     // En el carrito el nombre va en un <p>, no en un enlace como en el catálogo.
-    expect(await esperarCarritoCargado('Bugs Bunny')).toBeInTheDocument();
+    expect(await screen.findByText('Bugs Bunny')).toBeInTheDocument();
     expect(screen.getByText(/Total: \$12.000/)).toBeInTheDocument();
   });
 
   it('dice que está vacío en vez de dejar la pantalla en blanco', async () => {
-    const pedidos = conCarrito([]);
+    // El helper ya espera a que el backend responda: un carrito vacío se ve
+    // igual que el estado inicial, así que sin esa espera el test pasaría sin
+    // haber comprobado nada.
+    await montarCarritoCargado([]);
 
-    montar('/carrito');
-
-    // Se espera a que el backend haya respondido de verdad: un carrito vacío se
-    // ve igual que el estado inicial, así que sin esto el test pasaría sin haber
-    // comprobado nada y dejaría su petición en vuelo.
-    await waitFor(() => expect(pedidos.veces).toBe(1));
-    expect(screen.getByText(/carrito está vacío/)).toBeInTheDocument();
+    expect(await screen.findByText(/carrito está vacío/)).toBeInTheDocument();
   });
 
   it('compra y lleva a la página de la orden', async () => {
-    conCarrito([itemDeCarrito(PRODUCTOS[0], 1)]);
     servidor.use(http.post(`${API}/checkout/`, () => HttpResponse.json({ id: 7 }, { status: 201 })));
-
-    montar('/carrito');
-    await esperarCarritoCargado('Bugs Bunny');
-    await userEvent.click(screen.getByRole('button', { name: /Confirmar compra/ }));
+    await montarCarritoCargado([itemDeCarrito(PRODUCTOS[0], 1)]);
+    await userEvent.click(await screen.findByRole('button', { name: /Confirmar compra/ }));
 
     expect(await screen.findByText(/Gracias por tu compra/)).toBeInTheDocument();
   });
 
   it('no navega si el checkout falla, y explica por qué', async () => {
-    conCarrito([itemDeCarrito(PRODUCTOS[0], 1)]);
     servidor.use(
       http.post(`${API}/checkout/`, () =>
         errorDeApi('carrito_vacio', 'Tu carrito está vacío.', {}, 400),
       ),
     );
-
-    montar('/carrito');
-    await esperarCarritoCargado('Bugs Bunny');
-    await userEvent.click(screen.getByRole('button', { name: /Confirmar compra/ }));
+    await montarCarritoCargado([itemDeCarrito(PRODUCTOS[0], 1)]);
+    await userEvent.click(await screen.findByRole('button', { name: /Confirmar compra/ }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/carrito está vacío/);
     expect(screen.queryByText(/Gracias por tu compra/)).not.toBeInTheDocument();
   });
 
   it('vacía el carrito entero de una vez', async () => {
-    conCarrito([itemDeCarrito(PRODUCTOS[0], 1)]);
     let vaciado = false;
     servidor.use(
       http.delete(`${API}/carrito/vaciar/`, () => {
@@ -253,10 +251,8 @@ describe('carrito y compra', () => {
         return new HttpResponse(null, { status: 204 });
       }),
     );
-
-    montar('/carrito');
-    await esperarCarritoCargado('Bugs Bunny');
-    await userEvent.click(screen.getByRole('button', { name: /Vaciar carrito/ }));
+    await montarCarritoCargado([itemDeCarrito(PRODUCTOS[0], 1)]);
+    await userEvent.click(await screen.findByRole('button', { name: /Vaciar carrito/ }));
 
     await waitFor(() => expect(vaciado).toBe(true));
   });
