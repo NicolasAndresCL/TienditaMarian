@@ -30,6 +30,22 @@ def test_el_esquema_publica_los_endpoints_clave_de_v1(esquema):
         assert esperado in paths, f"falta {esperado} en el esquema v1"
 
 
+def test_el_esquema_documenta_como_autenticarse(esquema):
+    """Regresión: `securitySchemes` se quedó VACÍO.
+
+    drf-spectacular solo sabe describir las clases de autenticación que conoce.
+    Al sustituir `JWTAuthentication` por la propia (`JWTCookieAuthentication`),
+    el esquema dejó de declarar cómo autenticarse y el botón «Authorize» del
+    Swagger pasó a no servir para nada — sin que nada fallara. Lo arregla la
+    extensión `EsquemaDeAutenticacion` de `core/api/authentication.py`.
+    """
+    esquemas = esquema.get("components", {}).get("securitySchemes", {})
+
+    assert "cookieAuth" in esquemas, "falta documentar la sesión por cookie"
+    assert "bearerAuth" in esquemas, "falta documentar la cabecera Bearer"
+    assert esquemas["cookieAuth"]["in"] == "cookie"
+
+
 def test_no_hay_operationids_duplicados(esquema):
     ids = [
         op["operationId"]

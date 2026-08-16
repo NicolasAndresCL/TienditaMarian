@@ -28,6 +28,7 @@ from __future__ import annotations
 
 from django.conf import settings
 from django.middleware.csrf import CsrfViewMiddleware
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from rest_framework import exceptions
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -72,3 +73,40 @@ class JWTCookieAuthentication(JWTAuthentication):
 
         if motivo is not None:
             raise exceptions.PermissionDenied(f"Fallo de verificación CSRF: {motivo}")
+
+
+class EsquemaDeAutenticacion(OpenApiAuthenticationExtension):
+    """Enseña al esquema OpenAPI cómo se autentica esta API.
+
+    drf-spectacular sabe describir las clases de autenticación que conoce, y al
+    reemplazar `JWTAuthentication` por la nuestra dejó de saberlo: el esquema
+    salía con `securitySchemes` VACÍO y el botón «Authorize» del Swagger dejaba
+    de servir para nada. Aquí se declaran las dos vías que acepta
+    `JWTCookieAuthentication`.
+    """
+
+    target_class = "core.api.authentication.JWTCookieAuthentication"
+    name = ["cookieAuth", "bearerAuth"]
+
+    def get_security_definition(self, auto_schema):
+        return [
+            {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": settings.JWT_COOKIE_ACCESS,
+                "description": (
+                    "Sesión del navegador. La pone el login y no es accesible "
+                    "desde JavaScript; las peticiones que escriben necesitan "
+                    "además la cabecera X-CSRFToken."
+                ),
+            },
+            {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": (
+                    "Para clientes de API. El `access` viene en el cuerpo del "
+                    "login. Por esta vía no se pide CSRF."
+                ),
+            },
+        ]
