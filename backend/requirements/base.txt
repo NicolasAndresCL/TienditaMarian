@@ -6,7 +6,7 @@
 #   - python-decouple → había DOS librerías de configuración; queda django-environ
 
 Django==6.1
-djangorestframework==3.18.0
+djangorestframework==3.18.1
 djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.9.0
 django-environ==0.14.0
